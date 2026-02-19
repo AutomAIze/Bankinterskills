@@ -1,6 +1,6 @@
 export interface Skill {
   name: string;
-  weight: number; // 0-100 importance for the role
+  weight: number;
 }
 
 export interface Role {
@@ -9,167 +9,47 @@ export interface Role {
   unit: string;
   description: string;
   skills: Skill[];
+  positionsCount: number;
+  declarativeWeight: number;
+  scientificWeight: number;
 }
 
 export interface CandidateSkill {
   name: string;
-  level: number; // 0-100
-  expected: number; // 0-100 (from role model)
+  level: number;
+  expected: number;
 }
 
 export type CandidateStatus = 'nuevo' | 'recomendado' | 'descartado' | 'en_pool';
+
+export type PipelineStage = 'applied' | 'screened' | 'validated' | 'shortlisted' | 'interview' | 'offer' | 'hired' | 'rejected';
 
 export interface Candidate {
   id: string;
   name: string;
   roleId: string;
   globalScore: number;
+  declarativeScore: number;
+  validatedScore: number | null;
+  combinedScore: number;
+  confidence: number;
+  pipelineStage: PipelineStage;
   skills: CandidateSkill[];
   status: CandidateStatus;
 }
 
-export const roles: Role[] = [
-  {
-    id: 'gestor-oficina-empresas',
-    name: 'Gestor de Oficina Empresas',
-    unit: 'Banca de Empresas',
-    description: 'Responsable de la gestión integral de clientes empresa, asesoramiento financiero y desarrollo comercial de la cartera asignada.',
-    skills: [
-      { name: 'Gestión Comercial', weight: 95 },
-      { name: 'Análisis Financiero', weight: 85 },
-      { name: 'Negociación', weight: 80 },
-      { name: 'Normativa Bancaria', weight: 75 },
-      { name: 'Gestión de Riesgos', weight: 70 },
-      { name: 'Comunicación', weight: 65 },
-    ],
-  },
-  {
-    id: 'analista-riesgo',
-    name: 'Analista de Riesgo',
-    unit: 'Dirección de Riesgos',
-    description: 'Evaluación y seguimiento del riesgo crediticio, elaboración de informes y modelos de scoring para la toma de decisiones.',
-    skills: [
-      { name: 'Gestión de Riesgos', weight: 95 },
-      { name: 'Análisis Financiero', weight: 90 },
-      { name: 'Modelización Estadística', weight: 85 },
-      { name: 'Normativa Bancaria', weight: 80 },
-      { name: 'Python / SQL', weight: 70 },
-      { name: 'Comunicación', weight: 55 },
-    ],
-  },
-  {
-    id: 'gestor-banca-personal',
-    name: 'Gestor de Banca Personal',
-    unit: 'Banca Personal',
-    description: 'Asesoramiento financiero personalizado a clientes de alto valor, gestión patrimonial y planificación de inversiones.',
-    skills: [
-      { name: 'Asesoramiento Financiero', weight: 95 },
-      { name: 'Gestión Comercial', weight: 85 },
-      { name: 'Productos de Inversión', weight: 80 },
-      { name: 'Comunicación', weight: 80 },
-      { name: 'Normativa MiFID', weight: 75 },
-      { name: 'Gestión de Carteras', weight: 70 },
-    ],
-  },
-  {
-    id: 'especialista-datos',
-    name: 'Especialista en Ciencia de Datos',
-    unit: 'Transformación Digital',
-    description: 'Desarrollo de modelos analíticos, machine learning y soluciones basadas en datos para optimizar procesos y productos bancarios.',
-    skills: [
-      { name: 'Machine Learning', weight: 95 },
-      { name: 'Python / SQL', weight: 90 },
-      { name: 'Modelización Estadística', weight: 90 },
-      { name: 'Visualización de Datos', weight: 75 },
-      { name: 'Cloud / Big Data', weight: 70 },
-      { name: 'Comunicación', weight: 55 },
-    ],
-  },
-];
+export const PIPELINE_CONFIG: Record<PipelineStage, { label: string; shortLabel: string; color: string; bgClass: string; textClass: string; borderClass: string }> = {
+  applied:     { label: 'Aplicado',    shortLabel: 'Apl',  color: '#94a3b8', bgClass: 'bg-slate-400',     textClass: 'text-slate-500',     borderClass: 'border-slate-300' },
+  screened:    { label: 'Filtrado',    shortLabel: 'Filt', color: '#3b82f6', bgClass: 'bg-blue-500',      textClass: 'text-blue-600',      borderClass: 'border-blue-300' },
+  validated:   { label: 'Validado',    shortLabel: 'Val',  color: '#0891b2', bgClass: 'bg-cyan-600',      textClass: 'text-cyan-700',      borderClass: 'border-cyan-300' },
+  shortlisted: { label: 'Shortlist',   shortLabel: 'Shl',  color: '#0d9488', bgClass: 'bg-teal-600',      textClass: 'text-teal-700',      borderClass: 'border-teal-300' },
+  interview:   { label: 'Entrevista',  shortLabel: 'Ent',  color: '#003DA5', bgClass: 'bg-primary',       textClass: 'text-primary',       borderClass: 'border-primary/30' },
+  offer:       { label: 'Oferta',      shortLabel: 'Ofe',  color: '#059669', bgClass: 'bg-emerald-600',   textClass: 'text-emerald-700',   borderClass: 'border-emerald-300' },
+  hired:       { label: 'Contratado',  shortLabel: 'Con',  color: '#047857', bgClass: 'bg-emerald-700',   textClass: 'text-emerald-800',   borderClass: 'border-emerald-400' },
+  rejected:    { label: 'Descartado',  shortLabel: 'Desc', color: '#dc2626', bgClass: 'bg-red-600',       textClass: 'text-red-600',       borderClass: 'border-red-300' },
+};
 
-const firstNames = [
-  'María', 'Carlos', 'Ana', 'Javier', 'Laura', 'Daniel', 'Elena', 'Pablo',
-  'Sofía', 'Alejandro', 'Marta', 'Sergio', 'Isabel', 'Andrés', 'Lucía',
-  'Raúl', 'Patricia', 'Diego', 'Carmen', 'Álvaro',
-];
-
-const lastNames = [
-  'García López', 'Martínez Ruiz', 'Fernández Torres', 'Sánchez Moreno',
-  'Rodríguez Díaz', 'López Hernández', 'González Muñoz', 'Hernández Álvarez',
-  'Pérez Romero', 'Gómez Navarro', 'Díaz Castro', 'Muñoz Ortega',
-  'Álvarez Gil', 'Romero Jiménez', 'Navarro Serrano', 'Torres Delgado',
-  'Jiménez Vega', 'Ruiz Molina', 'Moreno Blanco', 'Ortega Suárez',
-];
-
-function generateCandidatesForRole(role: Role, count: number): Candidate[] {
-  const candidates: Candidate[] = [];
-  const usedNames = new Set<string>();
-
-  for (let i = 0; i < count; i++) {
-    let name: string;
-    do {
-      name = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
-    } while (usedNames.has(name));
-    usedNames.add(name);
-
-    // Create candidate archetype: strong, medium, or weak
-    const archetype = i < count * 0.3 ? 'strong' : i < count * 0.7 ? 'medium' : 'weak';
-    const baseOffset = archetype === 'strong' ? 15 : archetype === 'medium' ? -5 : -25;
-
-    const skills: CandidateSkill[] = role.skills.map((rs) => {
-      const variation = Math.floor(Math.random() * 20) - 10;
-      const level = Math.min(100, Math.max(10, rs.weight + baseOffset + variation));
-      return {
-        name: rs.name,
-        level,
-        expected: rs.weight,
-      };
-    });
-
-    const globalScore = Math.round(
-      skills.reduce((sum, s) => {
-        const roleSkill = role.skills.find((rs) => rs.name === s.name)!;
-        return sum + s.level * (roleSkill.weight / 100);
-      }, 0) / skills.reduce((sum, s) => {
-        const roleSkill = role.skills.find((rs) => rs.name === s.name)!;
-        return sum + roleSkill.weight / 100;
-      }, 0)
-    );
-
-    const statuses: CandidateStatus[] = ['nuevo', 'recomendado', 'en_pool', 'descartado'];
-    let status: CandidateStatus;
-    if (globalScore >= 80) status = Math.random() > 0.3 ? 'recomendado' : 'nuevo';
-    else if (globalScore >= 60) status = Math.random() > 0.5 ? 'nuevo' : 'en_pool';
-    else status = Math.random() > 0.4 ? 'descartado' : 'nuevo';
-
-    candidates.push({
-      id: `${role.id}-${i + 1}`,
-      name,
-      roleId: role.id,
-      globalScore,
-      skills,
-      status,
-    });
-  }
-
-  return candidates.sort((a, b) => b.globalScore - a.globalScore);
-}
-
-export const candidates: Candidate[] = roles.flatMap((role) =>
-  generateCandidatesForRole(role, 15)
-);
-
-export function getCandidatesForRole(roleId: string): Candidate[] {
-  return candidates.filter((c) => c.roleId === roleId);
-}
-
-export function getCandidateById(candidateId: string): Candidate | undefined {
-  return candidates.find((c) => c.id === candidateId);
-}
-
-export function getRoleById(roleId: string): Role | undefined {
-  return roles.find((r) => r.id === roleId);
-}
+export const PIPELINE_ORDER: PipelineStage[] = ['applied', 'screened', 'validated', 'shortlisted', 'interview', 'offer', 'hired'];
 
 export function getScoreLabel(score: number): { label: string; color: 'high' | 'medium' | 'low' } {
   if (score >= 80) return { label: 'Alto encaje', color: 'high' };
@@ -185,4 +65,20 @@ export function getStatusLabel(status: CandidateStatus): string {
     en_pool: 'En pool',
   };
   return labels[status];
+}
+
+export function getPipelineLabel(stage: PipelineStage): string {
+  return PIPELINE_CONFIG[stage]?.label ?? stage;
+}
+
+export function getConfidenceLabel(confidence: number): { label: string; color: 'high' | 'medium' | 'low' } {
+  if (confidence >= 0.75) return { label: 'Alta', color: 'high' };
+  if (confidence >= 0.50) return { label: 'Media', color: 'medium' };
+  return { label: 'Baja', color: 'low' };
+}
+
+export function getSourceLabel(source: string): { label: string; type: 'declarative' | 'scientific' } {
+  const scientific = ['PANORAMA', 'TKT_AGENT'];
+  if (scientific.includes(source)) return { label: source === 'PANORAMA' ? 'Panorama' : 'TKT Agent', type: 'scientific' };
+  return { label: source === 'SABADELL' ? 'Sabadell' : 'Declarativo', type: 'declarative' };
 }

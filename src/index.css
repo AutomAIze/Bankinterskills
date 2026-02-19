@@ -2,75 +2,100 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 215 25% 15%;
+    --background: 216 25% 97%;
+    --foreground: 215 40% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --card-foreground: 215 40% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover-foreground: 215 40% 12%;
 
-    --primary: 203 85% 30%;
+    --primary: 218 100% 32%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 20% 95%;
-    --secondary-foreground: 215 25% 25%;
+    --secondary: 216 22% 94%;
+    --secondary-foreground: 215 40% 20%;
 
-    --muted: 210 15% 93%;
-    --muted-foreground: 215 12% 50%;
+    --muted: 216 18% 92%;
+    --muted-foreground: 215 14% 46%;
 
-    --accent: 168 55% 42%;
+    --accent: 192 100% 44%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 65% 52%;
+    --destructive: 5 58% 44%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 20% 90%;
-    --input: 214 20% 90%;
-    --ring: 203 85% 30%;
+    --border: 216 20% 88%;
+    --input: 216 20% 88%;
+    --ring: 218 100% 32%;
 
-    --radius: 0.5rem;
+    --radius: 0px;
 
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-foreground: 215 40% 20%;
+    --sidebar-primary: 215 50% 14%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 216 22% 94%;
+    --sidebar-accent-foreground: 215 40% 12%;
+    --sidebar-border: 216 20% 90%;
+    --sidebar-ring: 218 100% 32%;
 
-    /* Custom tokens */
-    --success: 152 55% 42%;
+    --success: 192 100% 38%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 215 48% 52%;
     --warning-foreground: 0 0% 100%;
-    --info: 203 85% 55%;
+    --info: 205 75% 48%;
     --info-foreground: 0 0% 100%;
 
-    --score-high: 152 55% 42%;
-    --score-medium: 38 92% 50%;
-    --score-low: 0 65% 52%;
+    --score-high: 192 100% 38%;
+    --score-medium: 215 48% 52%;
+    --score-low: 5 58% 44%;
+
+    --navy: 215 50% 14%;
+    --navy-foreground: 0 0% 100%;
+    --teal-light: 192 70% 92%;
+    --chart-1: 218 100% 32%;
+    --chart-2: 192 100% 38%;
+    --chart-3: 205 75% 48%;
+    --chart-4: 215 48% 52%;
+    --chart-5: 215 35% 65%;
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    border-radius: 0 !important;
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  html {
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.01em;
   }
 }
 
 @layer utilities {
+  .clip-diagonal {
+    clip-path: polygon(30% 0, 100% 0, 100% 100%, 0% 100%);
+  }
+
   .score-high {
     color: hsl(var(--score-high));
   }
@@ -88,5 +113,76 @@
   }
   .bg-score-low {
     background-color: hsl(var(--score-low));
+  }
+  .bg-navy {
+    background-color: hsl(var(--navy));
+  }
+  .text-navy {
+    color: hsl(var(--navy));
+  }
+
+  .card-elevated {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+    border: 1px solid hsl(var(--border));
+  }
+
+  .card-elevated-lg {
+    box-shadow: 0 4px 16px -2px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+    border: 1px solid hsl(var(--border));
+  }
+
+  .chart-tooltip {
+    background: hsl(var(--card)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: 0 !important;
+    box-shadow: 0 4px 16px -2px rgb(0 0 0 / 0.08) !important;
+    font-size: 0.8125rem !important;
+    padding: 10px 14px !important;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .gradient-teal {
+    background: linear-gradient(135deg, hsl(218, 100%, 32%) 0%, hsl(192, 100%, 38%) 100%);
+  }
+
+  .gradient-navy {
+    background: linear-gradient(135deg, hsl(215, 50%, 14%) 0%, hsl(215, 45%, 22%) 100%);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+  }
+}
+
+@layer components {
+  .recharts-cartesian-grid line {
+    stroke: hsl(var(--border));
+    stroke-dasharray: 3 3;
+  }
+
+  .recharts-tooltip-wrapper {
+    outline: none !important;
+  }
+
+  .recharts-default-tooltip {
+    @apply chart-tooltip;
+  }
+
+  .recharts-polar-grid-angle line,
+  .recharts-polar-grid-concentric path {
+    stroke: hsl(var(--border));
+  }
+
+  .recharts-polar-angle-axis-tick-value {
+    font-size: 10px;
+    fill: hsl(var(--muted-foreground));
   }
 }

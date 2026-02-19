@@ -1,16 +1,60 @@
-import { useState } from 'react';
-import { roles, getCandidatesForRole } from '@/data/mockData';
+import { useSearchParams } from 'react-router-dom';
+import { useRoles, useCandidatesForRole, useDemoMetrics } from '@/hooks/useSkillsData';
+import { PIPELINE_CONFIG, PIPELINE_ORDER } from '@/data/mockData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Target, TrendingDown, BarChart3 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { Clock, Target, TrendingDown, BarChart3, Loader2, Activity, ShieldCheck, FileCheck } from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  Cell, LabelList, PieChart, Pie, Legend,
+} from 'recharts';
+
+const CustomBarTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="chart-tooltip">
+      <p className="font-semibold text-foreground text-xs mb-1">Score {label}</p>
+      <p className="text-xs text-muted-foreground">
+        Candidatos: <span className="font-bold text-foreground">{payload[0].value}</span>
+      </p>
+    </div>
+  );
+};
+
+const CustomPieTooltip = ({ active, payload }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="chart-tooltip">
+      <p className="font-semibold text-foreground text-xs mb-1">{payload[0].name}</p>
+      <p className="text-xs text-muted-foreground">
+        Candidatos: <span className="font-bold text-foreground">{payload[0].value}</span>
+      </p>
+    </div>
+  );
+};
 
 const InsightsView = () => {
-  const [selectedRoleId, setSelectedRoleId] = useState(roles[0].id);
-  const role = roles.find((r) => r.id === selectedRoleId) || roles[0];
-  const candidates = getCandidatesForRole(role.id);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Distribution histogram
+  const { data: roles = [], isLoading: rolesLoading } = useRoles();
+  const selectedRoleId = searchParams.get('role') || roles[0]?.id || '';
+  const role = roles.find((r) => r.id === selectedRoleId) || roles[0];
+
+  const { data: candidates = [], isLoading: candidatesLoading } = useCandidatesForRole(role?.id);
+  const { data: metrics, isLoading: metricsLoading } = useDemoMetrics(role?.id);
+
+  const isLoading = rolesLoading || candidatesLoading || metricsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!role) return null;
+
   const buckets = [
     { range: '0–20', min: 0, max: 20 },
     { range: '21–40', min: 21, max: 40 },
@@ -21,28 +65,52 @@ const InsightsView = () => {
 
   const distributionData = buckets.map((b) => ({
     range: b.range,
-    count: candidates.filter((c) => c.globalScore >= b.min && c.globalScore <= b.max).length,
-    fill: b.min >= 80 ? 'hsl(var(--success))' : b.min >= 60 ? 'hsl(var(--warning))' : 'hsl(var(--muted-foreground))',
+    count: candidates.filter((c) => c.combinedScore >= b.min && c.combinedScore <= b.max).length,
   }));
 
-  // Simulated KPIs
-  const traditionalHours = candidates.length * 0.75; // 45 min per candidate traditional
-  const toolHours = candidates.length * 0.1; // 6 min with tool
-  const savedHours = Math.round(traditionalHours - toolHours);
-  const shortlistTraditional = Math.round(candidates.length * 0.6);
-  const shortlistTool = candidates.filter((c) => c.globalScore >= 70).length;
-  const precisionIncrease = Math.round(((shortlistTool / Math.max(shortlistTraditional, 1)) - 1) * -100);
-  const irrelevantInterviews = Math.round(candidates.filter((c) => c.globalScore < 50).length / candidates.length * 100);
+  const getBarColor = (range: string) => {
+    if (range === '81–100') return 'hsl(192, 100%, 38%)';
+    if (range === '61–80') return 'hsl(218, 100%, 32%)';
+    if (range === '41–60') return 'hsl(215, 48%, 52%)';
+    if (range === '21–40') return 'hsl(215, 35%, 65%)';
+    return 'hsl(5, 58%, 44%)';
+  };
+
+  const pipelineData = PIPELINE_ORDER
+    .map((stage) => {
+      const count = candidates.filter((c) => c.pipelineStage === stage).length;
+      const cfg = PIPELINE_CONFIG[stage];
+      return { name: cfg.label, value: count, fill: cfg.color };
+    })
+    .filter((d) => d.value > 0);
+
+  const rejectedCount = candidates.filter((c) => c.pipelineStage === 'rejected').length;
+  if (rejectedCount > 0) {
+    pipelineData.push({ name: 'Descartado', value: rejectedCount, fill: PIPELINE_CONFIG.rejected.color });
+  }
+
+  const validatedCandidates = candidates.filter((c) => c.validatedScore != null);
+  const nonValidated = candidates.filter((c) => c.validatedScore == null);
+  const avgDeclAll = candidates.length ? Math.round(candidates.reduce((s, c) => s + c.declarativeScore, 0) / candidates.length) : 0;
+  const avgValidOnly = validatedCandidates.length ? Math.round(validatedCandidates.reduce((s, c) => s + (c.validatedScore ?? 0), 0) / validatedCandidates.length) : 0;
+  const avgCombAll = candidates.length ? Math.round(candidates.reduce((s, c) => s + c.combinedScore, 0) / candidates.length) : 0;
+  const avgConfidence = candidates.length ? Math.round(candidates.reduce((s, c) => s + c.confidence, 0) / candidates.length * 100) : 0;
+
+  const hoursSaved = metrics?.hoursSaved ?? 0;
+  const precisionGain = metrics?.shortlistPrecisionGain ?? 0;
+  const interviewReduction = metrics?.irrelevantInterviewsReduction ?? 0;
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Insights y Ahorro</h2>
-          <p className="text-sm text-muted-foreground">Valor económico y operativo del screening basado en skills</p>
+          <h2 className="text-lg sm:text-xl font-bold text-navy tracking-tight">Insights y Eficiencia</h2>
+          <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
+            Métricas operativas, cobertura de validación y distribución del pipeline
+          </p>
         </div>
-        <Select value={selectedRoleId} onValueChange={setSelectedRoleId}>
-          <SelectTrigger className="w-72 bg-card">
+        <Select value={selectedRoleId} onValueChange={(v) => setSearchParams({ role: v })}>
+          <SelectTrigger className="w-full sm:w-72 bg-card shadow-card text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="bg-card z-50">
@@ -53,109 +121,173 @@ const InsightsView = () => {
         </Select>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <Clock className="h-5 w-5 text-primary" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+        <Card className="shadow-card overflow-hidden">
+          <div className="h-1 bg-primary" />
+          <CardContent className="p-3 sm:pt-5 sm:pb-5">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center bg-primary/10 shrink-0">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               </div>
               <div>
-                <p className="text-3xl font-bold text-foreground">{savedHours}h</p>
-                <p className="text-sm text-muted-foreground mt-1">Horas de screening ahorradas</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  vs. {traditionalHours.toFixed(0)}h en proceso tradicional
-                </p>
+                <p className="text-2xl sm:text-3xl font-extrabold text-navy tabular-nums">{hoursSaved}h</p>
+                <p className="text-[11px] sm:text-xs text-muted-foreground font-medium mt-0.5">Horas de screening ahorradas</p>
+                <p className="text-[10px] text-muted-foreground/70 mt-1 hidden sm:block">Sobre {candidates.length} candidatos evaluados</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
-                <Target className="h-5 w-5 text-success" />
+        <Card className="shadow-card overflow-hidden">
+          <div className="h-1 bg-accent" />
+          <CardContent className="p-3 sm:pt-5 sm:pb-5">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center bg-accent/10 shrink-0">
+                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
               </div>
               <div>
-                <p className="text-3xl font-bold text-foreground">+{Math.abs(precisionIncrease)}%</p>
-                <p className="text-sm text-muted-foreground mt-1">Incremento en precisión del shortlist</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Shortlist objetivo: {shortlistTool} vs. {shortlistTraditional} tradicional
-                </p>
+                <p className="text-2xl sm:text-3xl font-extrabold text-navy tabular-nums">+{precisionGain}%</p>
+                <p className="text-[11px] sm:text-xs text-muted-foreground font-medium mt-0.5">Precisión del shortlist</p>
+                <p className="text-[10px] text-muted-foreground/70 mt-1 hidden sm:block">vs. selección tradicional</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10">
-                <TrendingDown className="h-5 w-5 text-destructive" />
+        <Card className="shadow-card overflow-hidden">
+          <div className="h-1 bg-destructive" />
+          <CardContent className="p-3 sm:pt-5 sm:pb-5">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center bg-destructive/10 shrink-0">
+                <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-destructive" />
               </div>
               <div>
-                <p className="text-3xl font-bold text-foreground">-{irrelevantInterviews}%</p>
-                <p className="text-sm text-muted-foreground mt-1">Reducción de entrevistas poco relevantes</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Candidatos con score &lt;50 filtrados automáticamente
-                </p>
+                <p className="text-2xl sm:text-3xl font-extrabold text-navy tabular-nums">-{interviewReduction}%</p>
+                <p className="text-[11px] sm:text-xs text-muted-foreground font-medium mt-0.5">Entrevistas poco relevantes</p>
+                <p className="text-[10px] text-muted-foreground/70 mt-1 hidden sm:block">Filtrado automático por bajo encaje</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Distribution chart */}
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-base">Distribución de scores de encaje — {role.name}</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={distributionData} barCategoryGap="20%">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="range" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: 'var(--radius)',
-                    fontSize: 13,
-                  }}
-                />
-                <Bar dataKey="count" name="Candidatos" radius={[4, 4, 0, 0]}>
-                  {distributionData.map((entry, index) => (
-                    <Cell key={index} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+        <Card className="shadow-metric">
+          <CardContent className="p-2 sm:pt-4 sm:pb-4 flex items-center gap-2 sm:gap-3">
+            <FileCheck className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-base sm:text-xl font-extrabold text-navy tabular-nums">{avgDeclAll}</p>
+              <p className="text-[8px] sm:text-[9px] text-muted-foreground font-semibold uppercase tracking-wider truncate">Avg decl.</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-metric">
+          <CardContent className="p-2 sm:pt-4 sm:pb-4 flex items-center gap-2 sm:gap-3">
+            <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-600 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-base sm:text-xl font-extrabold text-navy tabular-nums">{avgValidOnly || '—'}</p>
+              <p className="text-[8px] sm:text-[9px] text-muted-foreground font-semibold uppercase tracking-wider truncate">Avg valid.</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-metric">
+          <CardContent className="p-2 sm:pt-4 sm:pb-4 flex items-center gap-2 sm:gap-3">
+            <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-teal-600 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-base sm:text-xl font-extrabold text-navy tabular-nums">{avgConfidence}%</p>
+              <p className="text-[8px] sm:text-[9px] text-muted-foreground font-semibold uppercase tracking-wider truncate">Confianza</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-metric">
+          <CardContent className="p-2 sm:pt-4 sm:pb-4 flex items-center gap-2 sm:gap-3">
+            <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+            <div className="min-w-0">
+              <p className="text-base sm:text-xl font-extrabold text-navy tabular-nums">
+                {candidates.length ? Math.round((validatedCandidates.length / candidates.length) * 100) : 0}%
+              </p>
+              <p className="text-[8px] sm:text-[9px] text-muted-foreground font-semibold uppercase tracking-wider truncate">Panorama</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Scientific basis */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="max-w-2xl">
-            <h3 className="text-sm font-semibold text-foreground mb-2">Base científica del enfoque</h3>
-            <p className="text-sm text-foreground/70 leading-relaxed">
-              El sistema de Skills Intelligence se fundamenta en una ontología de skills normalizada (ESCO + modelo interno Banco Sabadell),
-              que permite cuantificar objetivamente el encaje entre candidatos y roles. El scoring se calcula mediante ponderación
-              de competencias según su relevancia para cada puesto, reduciendo el sesgo subjetivo y convirtiendo las decisiones
-              de selección en un proceso más científico, eficiente y auditable.
-            </p>
-            <p className="text-sm text-foreground/70 leading-relaxed mt-3">
-              Este enfoque permite priorizar candidatos con mayor potencial de éxito, identificar gaps formativos antes de
-              la incorporación y optimizar el tiempo de los equipos de selección centrando su atención en los perfiles
-              con mayor probabilidad de encaje real.
-            </p>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-5">
+        <Card className="shadow-card lg:col-span-2">
+          <CardHeader className="p-3 sm:p-6 pb-2">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              <CardTitle className="text-xs sm:text-sm font-bold text-navy truncate">
+                Distribución scores — {role.name}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+            <div className="h-56 sm:h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={distributionData} barCategoryGap="20%">
+                  <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                  <XAxis dataKey="range" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} />
+                  <YAxis tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} allowDecimals={false} axisLine={false} tickLine={false} width={25} />
+                  <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} />
+                  <Bar dataKey="count" name="Candidatos" radius={0} maxBarSize={48}>
+                    {distributionData.map((entry, index) => (
+                      <Cell key={index} fill={getBarColor(entry.range)} />
+                    ))}
+                    <LabelList dataKey="count" position="top" style={{ fontSize: 10, fontWeight: 700, fill: 'hsl(var(--foreground))' }} />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card">
+          <CardHeader className="p-3 sm:p-6 pb-2">
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-primary" />
+              <CardTitle className="text-xs sm:text-sm font-bold text-navy">Pipeline por fases</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+            <div className="h-48 sm:h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={pipelineData} cx="50%" cy="50%" innerRadius={35} outerRadius={60} paddingAngle={3} dataKey="value" strokeWidth={0}>
+                    {pipelineData.map((entry, index) => (
+                      <Cell key={index} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomPieTooltip />} />
+                  <Legend
+                    wrapperStyle={{ fontSize: 9, paddingTop: 4 }}
+                    iconType="square"
+                    iconSize={7}
+                    formatter={(value) => <span className="text-foreground font-medium">{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-2 text-center">
+              <p className="text-xl sm:text-2xl font-extrabold text-navy tabular-nums">{candidates.length}</p>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Total candidatos</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="shadow-card">
+        <CardContent className="p-3 sm:pt-5 sm:pb-5 sm:px-6">
+          <h3 className="text-xs sm:text-sm font-bold text-navy mb-1.5 sm:mb-2">Metodología de scoring probabilístico</h3>
+          <p className="text-[10px] sm:text-xs text-foreground/65 leading-relaxed">
+            El sistema combina dos fuentes de datos: el <strong>score declarativo</strong> (análisis de CV/LinkedIn por IA,
+            ponderación 40%) y el <strong>score validado</strong> (sesiones Panorama con telemetría conductual, ponderación 60%).
+            La <strong>confianza</strong> refleja cuántos datos validados existen para cada candidato.
+            Candidatos sin validación Panorama conservan únicamente su score declarativo con confianza reducida.
+          </p>
+          <p className="text-[10px] sm:text-xs text-foreground/65 leading-relaxed mt-2 hidden sm:block">
+            Este enfoque dual permite priorizar candidatos con mayor probabilidad real de éxito,
+            reducir el sesgo de la información auto-declarada, y concentrar las entrevistas en
+            perfiles contrastados científicamente.
+          </p>
         </CardContent>
       </Card>
     </div>
