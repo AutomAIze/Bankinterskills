@@ -39,7 +39,7 @@ const LoginPage = () => {
             <img
               src="/sabadell-logo.png"
               alt="Banco Sabadell"
-              className="h-7 w-auto brightness-0 invert"
+              className="h-10 w-auto rounded-sm"
             />
           </div>
 
