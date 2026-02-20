@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
-import {
-  Bot, Loader2, Trash2, ArrowUp, RotateCcw, ExternalLink,
-} from 'lucide-react';
+import { Bot, Loader2, Trash2, ArrowUp, RotateCcw, ExternalLink } from 'lucide-react';
 import { generateResponse } from '@/lib/ai-engine';
+import type { ResponseMeta } from '@/lib/ai-engine';
+import ValidationPanel from '@/components/ValidationPanel';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  meta?: ResponseMeta;
 }
 
 let msgCounter = 0;
@@ -56,8 +57,14 @@ const ChatView = () => {
     }
 
     try {
-      const response = await generateResponse(content.trim(), getContext());
-      setMessages([...updated, { id: nextId(), role: 'assistant', content: response, timestamp: new Date() }]);
+      const result = await generateResponse(content.trim(), getContext());
+      setMessages([...updated, {
+        id: nextId(),
+        role: 'assistant',
+        content: result.text,
+        timestamp: new Date(),
+        meta: result.meta,
+      }]);
     } catch {
       setMessages([
         ...updated,
@@ -107,7 +114,7 @@ const ChatView = () => {
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto" onClick={handleInternalLink}>
         {isEmpty ? (
-          <EmptyState />
+          <EmptyState onSend={sendMessage} />
         ) : (
           <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 sm:py-8 space-y-0">
             {messages.map((msg, idx) => (
@@ -190,16 +197,42 @@ const ChatView = () => {
 
 /* ─── Empty State ──────────────────────────────────────────────────── */
 
-function EmptyState() {
+const SUGGESTED_QUERIES = [
+  {
+    label: 'Gestor Oficina Empresas',
+    query: '¿Quiénes son los mejores candidatos para Gestor Oficina Empresas?',
+  },
+  {
+    label: 'Analista de Riesgo',
+    query: 'Muéstrame el ranking de candidatos para Analista de Riesgo de Crédito',
+  },
+  {
+    label: 'Dimensiones de inteligencia',
+    query: '¿Cuáles son las dimensiones de inteligencia de los candidatos para Banca Personal?',
+  },
+  {
+    label: 'Validación Panorama',
+    query: '¿Qué candidatos tienen validación Panorama para Gestor Oficina Empresas?',
+  },
+  {
+    label: 'Shortlist y recomendaciones',
+    query: '¿Cuál es el shortlist recomendado para Analista de Riesgo?',
+  },
+  {
+    label: 'Gaps de competencias',
+    query: '¿Qué gaps de skills hay en los candidatos de Banca Personal?',
+  },
+];
+
+function EmptyState({ onSend }: { onSend: (query: string) => void }) {
   return (
     <div className="flex flex-col items-center justify-center px-4 sm:px-6 py-8 sm:py-12 overflow-y-auto h-full">
       <div className="max-w-2xl w-full">
-        {/* Header */}
         <div className="text-center mb-8 sm:mb-10">
           <img
             src="/sabadell-logo.png"
             alt="Banco Sabadell"
-            className="h-16 w-16 mb-5 object-contain mx-auto"
+            className="h-8 sm:h-10 w-auto mb-6 mx-auto"
           />
           <h2 className="text-2xl sm:text-3xl font-bold text-navy mb-3 tracking-tight">
             Buscador de candidatos
@@ -208,6 +241,23 @@ function EmptyState() {
             Busca por posición para consultar candidatos, scores, dimensiones de inteligencia,
             hard skills, soft skills y datos de validación.
           </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+          {SUGGESTED_QUERIES.map((item, i) => (
+            <button
+              key={i}
+              onClick={() => onSend(item.query)}
+              className="group p-3.5 sm:p-4 border border-border/60 bg-card text-left hover:border-primary/30 hover:shadow-card-hover transition-all duration-200 active:scale-[0.98]"
+            >
+              <p className="text-xs font-bold text-navy mb-0.5 group-hover:text-primary transition-colors">
+                {item.label}
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
+                {item.query}
+              </p>
+            </button>
+          ))}
         </div>
       </div>
     </div>
@@ -218,6 +268,9 @@ function EmptyState() {
 
 function MessageBubble({ message, isLast }: { message: Message; isLast: boolean }) {
   const isUser = message.role === 'user';
+  const [showValidation, setShowValidation] = useState(false);
+  const [validated, setValidated] = useState(false);
+  const hasCandidates = !isUser && message.meta?.candidates && message.meta.candidates.length > 0;
 
   return (
     <div className={`py-5 sm:py-6 ${isUser ? '' : 'bg-secondary/25 -mx-4 sm:-mx-6 px-4 sm:px-6'} ${isLast && !isUser ? 'animate-fadeIn' : ''}`}>
@@ -226,7 +279,7 @@ function MessageBubble({ message, isLast }: { message: Message; isLast: boolean 
           isUser ? 'bg-secondary border border-border' : 'gradient-navy'
         }`}>
           {isUser ? (
-            <span className="text-[11px] font-bold text-navy">TÚ</span>
+            <span className="text-[11px] font-bold text-navy">TU</span>
           ) : (
             <Bot className="h-4 w-4 text-white" />
           )}
@@ -235,7 +288,7 @@ function MessageBubble({ message, isLast }: { message: Message; isLast: boolean 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5 mb-2">
             <span className="text-xs font-bold text-navy">
-              {isUser ? 'Tú' : 'Skills Intelligence'}
+              {isUser ? 'Tu' : 'Skills Intelligence'}
             </span>
             <span className="text-[11px] text-muted-foreground/70 tabular-nums">
               {message.timestamp.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
@@ -249,6 +302,27 @@ function MessageBubble({ message, isLast }: { message: Message; isLast: boolean 
               <FormattedMarkdown content={message.content} />
             )}
           </div>
+
+          {hasCandidates && !showValidation && !validated && (
+            <button
+              onClick={() => setShowValidation(true)}
+              className="mt-4 px-4 py-2 text-xs font-semibold border-2 border-navy text-navy hover:bg-navy hover:text-white transition-all active:scale-[0.98]"
+            >
+              Validar resultados
+            </button>
+          )}
+
+          {validated && (
+            <p className="mt-3 text-[11px] text-accent font-medium">Resultados validados</p>
+          )}
+
+          {showValidation && message.meta && (
+            <ValidationPanel
+              meta={message.meta}
+              onClose={() => setShowValidation(false)}
+              onSaved={() => { setShowValidation(false); setValidated(true); }}
+            />
+          )}
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Eye, EyeOff, Lock, Mail, Brain, Layers, ShieldCheck, Search } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -31,57 +31,56 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex">
       <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden bg-navy">
-        <div className="absolute top-0 right-0 w-[45%] h-full bg-primary/40 clip-diagonal" />
-        <div className="absolute bottom-0 left-0 w-full h-[2px] gradient-teal" />
+        <div className="absolute top-0 right-0 w-[45%] h-full bg-primary/30 clip-diagonal" />
+        <div className="absolute bottom-0 left-0 w-full h-[2px] gradient-shine" />
+        <div className="absolute top-[20%] right-[10%] w-64 h-64 bg-accent/5 blur-3xl" />
+        <div className="absolute bottom-[15%] left-[5%] w-48 h-48 bg-primary/5 blur-3xl" />
 
         <div className="relative z-10 flex flex-col justify-between p-14 w-full">
           <div>
             <img
               src="/sabadell-logo.png"
               alt="Banco Sabadell"
-              className="h-10 w-auto rounded-sm"
+              className="h-10 w-auto brightness-0 invert"
             />
           </div>
 
           <div className="max-w-md">
-            <p className="text-[10px] font-bold text-white/40 tracking-[0.2em] uppercase mb-4">
+            <p className="text-[10px] font-bold text-white/35 tracking-[0.25em] uppercase mb-4">
               Skills Intelligence
             </p>
-            <h2 className="text-[30px] font-bold text-white leading-[1.15] tracking-tight mb-5">
+            <h2 className="text-[32px] font-bold text-white leading-[1.12] tracking-tight mb-5">
               Selección basada en<br />
               inteligencia de skills
             </h2>
-            <p className="text-sm text-white/40 leading-relaxed max-w-sm">
+            <p className="text-sm text-white/35 leading-relaxed max-w-sm">
               Modelo científico de competencias para optimizar
               la precisión y eficiencia en procesos de selección.
             </p>
 
             <div className="mt-12 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-white/8 pt-6">
               {[
-                { icon: Brain, title: 'Inteligencia multidimensional', desc: 'IQ · EQ · DQ · BQ · AQ' },
-                { icon: Layers, title: 'Taxonomía ESCO', desc: 'Hard skills · Soft skills · Digital' },
-                { icon: ShieldCheck, title: 'Validación científica', desc: 'Scoring declarativo + Panorama' },
-                { icon: Search, title: 'Buscador inteligente', desc: 'Consultas por rol, skill o candidato' },
+                { title: 'Inteligencia multidimensional', desc: 'IQ · EQ · DQ · BQ · AQ' },
+                { title: 'Taxonomía ESCO', desc: 'Hard skills · Soft skills · Digital' },
+                { title: 'Validación científica', desc: 'Scoring declarativo + Panorama' },
+                { title: 'Buscador inteligente', desc: 'Consultas por rol, skill o candidato' },
               ].map((f, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <f.icon className="h-4 w-4 text-white/50 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-[11px] font-semibold text-white leading-tight">{f.title}</p>
-                    <p className="text-[10px] text-white/30 mt-0.5">{f.desc}</p>
-                  </div>
+                <div key={i} className="group">
+                  <p className="text-[11px] font-semibold text-white leading-tight">{f.title}</p>
+                  <p className="text-[10px] text-white/25 mt-0.5">{f.desc}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <p className="text-[10px] text-white/15 font-medium">
+          <p className="text-[10px] text-white/12 font-medium">
             © 2024 Banco Sabadell — Módulo de Selección
           </p>
         </div>
       </div>
 
       <div className="flex-1 flex items-center justify-center bg-background px-4 sm:px-8">
-        <div className="w-full max-w-[360px]">
+        <div className="w-full max-w-[360px] animate-fadeIn">
           <div className="lg:hidden flex items-center gap-3 mb-10">
             <img
               src="/sabadell-logo.png"
@@ -90,17 +89,9 @@ const LoginPage = () => {
             />
           </div>
 
-          <div className="hidden lg:block mb-8">
-            <img
-              src="/sabadell-logo.png"
-              alt="Banco Sabadell"
-              className="h-6 w-auto mb-6"
-            />
-          </div>
-
           <div className="mb-7">
             <h3 className="text-lg font-bold text-navy tracking-tight">Iniciar sesión</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted-foreground mt-1">
               Accede a la plataforma de selección
             </p>
           </div>
@@ -111,7 +102,7 @@ const LoginPage = () => {
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/40" />
                 <input
                   type="email"
                   value={email}
@@ -119,7 +110,7 @@ const LoginPage = () => {
                   placeholder="nombre@sabadell.com"
                   required
                   autoComplete="email"
-                  className="w-full border bg-card pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+                  className="w-full border border-border/80 bg-card pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/35 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all duration-200 shadow-sm hover:border-border"
                 />
               </div>
             </div>
@@ -129,7 +120,7 @@ const LoginPage = () => {
                 Contraseña
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/40" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
@@ -137,12 +128,12 @@ const LoginPage = () => {
                   placeholder="••••••••"
                   required
                   autoComplete="current-password"
-                  className="w-full border bg-card pl-9 pr-11 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+                  className="w-full border border-border/80 bg-card pl-9 pr-11 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/35 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all duration-200 shadow-sm hover:border-border"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/35 hover:text-foreground transition-colors"
                 >
                   {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 </button>
@@ -150,7 +141,7 @@ const LoginPage = () => {
             </div>
 
             {error && (
-              <div className="border-l-2 border-destructive bg-destructive/5 px-3 py-2.5">
+              <div className="border-l-2 border-destructive bg-destructive/5 px-3 py-2.5 animate-fadeIn">
                 <p className="text-xs text-destructive">{error}</p>
               </div>
             )}
@@ -158,7 +149,7 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 gradient-navy px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50 transition-all"
+              className="w-full flex items-center justify-center gap-2 gradient-navy px-4 py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50 transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98]"
             >
               {loading ? (
                 <>
@@ -171,17 +162,17 @@ const LoginPage = () => {
             </button>
           </form>
 
-          <div className="mt-8 border-l-2 border-primary bg-primary/[0.03] p-4">
+          <div className="mt-8 border border-primary/10 bg-primary/[0.02] p-4">
             <p className="text-[9px] font-bold text-primary uppercase tracking-[0.15em] mb-2">
               Acceso demo
             </p>
             <div className="space-y-1 text-xs font-mono">
-              <p className="text-foreground/60">
-                <span className="text-muted-foreground/50 mr-2">email</span>
+              <p className="text-foreground/55">
+                <span className="text-muted-foreground/40 mr-2">email</span>
                 admin@sabadell.com
               </p>
-              <p className="text-foreground/60">
-                <span className="text-muted-foreground/50 mr-2">pass</span>
+              <p className="text-foreground/55">
+                <span className="text-muted-foreground/40 mr-2">pass</span>
                 skills2024
               </p>
             </div>

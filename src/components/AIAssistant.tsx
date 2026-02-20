@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams, useParams } from 'react-router-dom';
-import { Bot, X, Send, Loader2, Sparkles, Trash2 } from 'lucide-react';
+import { Bot, X, Send, Loader2, Trash2 } from 'lucide-react';
 import { generateResponse } from '@/lib/ai-engine';
 
 interface Message {
@@ -77,7 +77,7 @@ const AIAssistant = () => {
     <>
       <button
         onClick={() => setOpen(!open)}
-        className={`fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center shadow-card-lg transition-all duration-200 ${
+        className={`fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center shadow-float transition-all duration-200 ${
           open
             ? 'bg-muted text-foreground'
             : 'gradient-navy text-white hover:opacity-90'
@@ -88,26 +88,21 @@ const AIAssistant = () => {
       </button>
 
       <div
-        className={`fixed bottom-22 right-6 z-50 flex flex-col border bg-card shadow-card-lg transition-all duration-200 origin-bottom-right ${
+        className={`fixed bottom-22 right-6 z-50 flex flex-col border bg-card shadow-float overflow-hidden transition-all duration-200 origin-bottom-right ${
           open
             ? 'w-[400px] h-[560px] opacity-100 scale-100'
             : 'w-0 h-0 opacity-0 scale-95 pointer-events-none'
         }`}
       >
         <div className="flex items-center justify-between bg-navy px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center bg-white/10">
-              <Sparkles className="h-3.5 w-3.5 text-white" />
-            </div>
-            <div>
-              <h3 className="text-xs font-semibold text-white leading-tight">Skills Intelligence</h3>
-              <p className="text-[9px] text-white/50 font-medium">Asistente de selección</p>
-            </div>
+          <div>
+            <h3 className="text-xs font-semibold text-white leading-tight">Skills Intelligence</h3>
+            <p className="text-[9px] text-white/50 font-medium">Asistente de selección</p>
           </div>
           {messages.length > 0 && (
             <button
               onClick={clearChat}
-              className="p-1.5 text-white/40 hover:bg-white/10 hover:text-white/80 transition-colors"
+              className="p-1.5 text-white/40 hover:bg-white/10 hover:text-white/80 transition-colors duration-200"
               title="Limpiar conversación"
             >
               <Trash2 className="h-3 w-3" />
@@ -118,9 +113,6 @@ const AIAssistant = () => {
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center px-2">
-              <div className="flex h-10 w-10 items-center justify-center gradient-teal mb-3">
-                <Bot className="h-5 w-5 text-white" />
-              </div>
               <h4 className="text-sm font-bold text-navy mb-1">
                 ¿En qué puedo ayudarte?
               </h4>
@@ -132,7 +124,7 @@ const AIAssistant = () => {
                   <button
                     key={i}
                     onClick={() => sendMessage(prompt)}
-                    className="w-full text-left text-[11px] border px-3 py-2 text-foreground/75 hover:bg-primary/[0.03] hover:border-primary/20 transition-colors font-medium"
+                    className="w-full text-left text-[11px] border px-3 py-2 text-foreground/75 hover:bg-primary/[0.03] hover:border-primary/20 transition-colors duration-200 font-medium"
                   >
                     {prompt}
                   </button>
@@ -186,7 +178,7 @@ const AIAssistant = () => {
               onKeyDown={handleKeyDown}
               placeholder="Escribe tu pregunta..."
               rows={1}
-              className="flex-1 resize-none border bg-secondary/30 px-3 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+              className="flex-1 resize-none border bg-secondary/30 px-3 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all duration-200"
               style={{ maxHeight: '100px' }}
               onInput={(e) => {
                 const t = e.currentTarget;
@@ -197,7 +189,7 @@ const AIAssistant = () => {
             <button
               onClick={() => sendMessage(input)}
               disabled={!input.trim() || loading}
-              className="flex h-[36px] w-[36px] items-center justify-center gradient-teal text-white disabled:opacity-40 hover:opacity-90 transition-all shrink-0"
+              className="flex h-[36px] w-[36px] items-center justify-center gradient-teal text-white disabled:opacity-40 hover:opacity-90 transition-all duration-200 shrink-0"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

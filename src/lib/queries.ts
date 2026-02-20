@@ -561,3 +561,32 @@ export async function fetchSkillSupplyDemand(): Promise<SkillSupplyDemand[]> {
     };
   });
 }
+
+// ─── Equivalence Gaps ───────────────────────────────────────────────
+
+export interface EquivalenceGap {
+  id: string;
+  roleName: string;
+  origin: 'agente' | 'cliente';
+  skillName: string;
+  externalId: string | null;
+  detail: string | null;
+}
+
+export async function fetchEquivalenceGaps(): Promise<EquivalenceGap[]> {
+  const { data, error } = await supabase
+    .from('skill_equivalence_gaps')
+    .select('*')
+    .order('role_name');
+
+  if (error) throw error;
+
+  return (data ?? []).map((g: any) => ({
+    id: g.id,
+    roleName: g.role_name,
+    origin: g.origin,
+    skillName: g.skill_name,
+    externalId: g.external_id,
+    detail: g.detail,
+  }));
+}

@@ -3,7 +3,7 @@ import { useRoles, useCandidatesForRole, useDemoMetrics } from '@/hooks/useSkill
 import { PIPELINE_CONFIG, PIPELINE_ORDER } from '@/data/mockData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Target, TrendingDown, BarChart3, Loader2, Activity, ShieldCheck, FileCheck } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   Cell, LabelList, PieChart, Pie, Legend,
@@ -113,7 +113,7 @@ const InsightsView = () => {
           <SelectTrigger className="w-full sm:w-72 bg-card shadow-card text-sm">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-card z-50">
+          <SelectContent className="bg-card z-50 shadow-float">
             {roles.map((r) => (
               <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
             ))}
@@ -122,113 +122,91 @@ const InsightsView = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-        <Card className="shadow-card overflow-hidden">
-          <div className="h-1 bg-primary" />
+        <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300 overflow-hidden">
+          <div className="h-1 gradient-shine" />
           <CardContent className="p-3 sm:pt-5 sm:pb-5">
-            <div className="flex items-start gap-3 sm:gap-4">
-              <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center bg-primary/10 shrink-0">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl sm:text-3xl font-extrabold text-navy tabular-nums">{hoursSaved}h</p>
-                <p className="text-[11px] sm:text-xs text-muted-foreground font-medium mt-0.5">Horas de screening ahorradas</p>
-                <p className="text-[10px] text-muted-foreground/70 mt-1 hidden sm:block">Sobre {candidates.length} candidatos evaluados</p>
-              </div>
+            <div>
+              <p className="text-2xl sm:text-3xl font-extrabold text-navy tabular-nums">{hoursSaved}h</p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground font-medium mt-0.5">Horas de screening ahorradas</p>
+              <p className="text-[10px] text-muted-foreground mt-1 hidden sm:block">Sobre {candidates.length} candidatos evaluados</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-card overflow-hidden">
+        <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300 overflow-hidden">
           <div className="h-1 bg-accent" />
           <CardContent className="p-3 sm:pt-5 sm:pb-5">
-            <div className="flex items-start gap-3 sm:gap-4">
-              <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center bg-accent/10 shrink-0">
-                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
-              </div>
-              <div>
-                <p className="text-2xl sm:text-3xl font-extrabold text-navy tabular-nums">+{precisionGain}%</p>
-                <p className="text-[11px] sm:text-xs text-muted-foreground font-medium mt-0.5">Precisión del shortlist</p>
-                <p className="text-[10px] text-muted-foreground/70 mt-1 hidden sm:block">vs. selección tradicional</p>
-              </div>
+            <div>
+              <p className="text-2xl sm:text-3xl font-extrabold text-navy tabular-nums">+{precisionGain}%</p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground font-medium mt-0.5">Precisión del shortlist</p>
+              <p className="text-[10px] text-muted-foreground mt-1 hidden sm:block">vs. selección tradicional</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-card overflow-hidden">
+        <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300 overflow-hidden">
           <div className="h-1 bg-destructive" />
           <CardContent className="p-3 sm:pt-5 sm:pb-5">
-            <div className="flex items-start gap-3 sm:gap-4">
-              <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center bg-destructive/10 shrink-0">
-                <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-destructive" />
-              </div>
-              <div>
-                <p className="text-2xl sm:text-3xl font-extrabold text-navy tabular-nums">-{interviewReduction}%</p>
-                <p className="text-[11px] sm:text-xs text-muted-foreground font-medium mt-0.5">Entrevistas poco relevantes</p>
-                <p className="text-[10px] text-muted-foreground/70 mt-1 hidden sm:block">Filtrado automático por bajo encaje</p>
-              </div>
+            <div>
+              <p className="text-2xl sm:text-3xl font-extrabold text-navy tabular-nums">-{interviewReduction}%</p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground font-medium mt-0.5">Entrevistas poco relevantes</p>
+              <p className="text-[10px] text-muted-foreground mt-1 hidden sm:block">Filtrado automático por bajo encaje</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-        <Card className="shadow-metric">
-          <CardContent className="p-2 sm:pt-4 sm:pb-4 flex items-center gap-2 sm:gap-3">
-            <FileCheck className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 shrink-0" />
+        <Card className="shadow-metric hover:shadow-metric-hover transition-shadow duration-300">
+          <CardContent className="p-2 sm:pt-4 sm:pb-4">
             <div className="min-w-0">
               <p className="text-base sm:text-xl font-extrabold text-navy tabular-nums">{avgDeclAll}</p>
-              <p className="text-[8px] sm:text-[9px] text-muted-foreground font-semibold uppercase tracking-wider truncate">Avg decl.</p>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground font-semibold uppercase tracking-wider truncate">Avg decl.</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-metric">
-          <CardContent className="p-2 sm:pt-4 sm:pb-4 flex items-center gap-2 sm:gap-3">
-            <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-600 shrink-0" />
+        <Card className="shadow-metric hover:shadow-metric-hover transition-shadow duration-300">
+          <CardContent className="p-2 sm:pt-4 sm:pb-4">
             <div className="min-w-0">
               <p className="text-base sm:text-xl font-extrabold text-navy tabular-nums">{avgValidOnly || '—'}</p>
-              <p className="text-[8px] sm:text-[9px] text-muted-foreground font-semibold uppercase tracking-wider truncate">Avg valid.</p>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground font-semibold uppercase tracking-wider truncate">Avg valid.</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-metric">
-          <CardContent className="p-2 sm:pt-4 sm:pb-4 flex items-center gap-2 sm:gap-3">
-            <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-teal-600 shrink-0" />
+        <Card className="shadow-metric hover:shadow-metric-hover transition-shadow duration-300">
+          <CardContent className="p-2 sm:pt-4 sm:pb-4">
             <div className="min-w-0">
               <p className="text-base sm:text-xl font-extrabold text-navy tabular-nums">{avgConfidence}%</p>
-              <p className="text-[8px] sm:text-[9px] text-muted-foreground font-semibold uppercase tracking-wider truncate">Confianza</p>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground font-semibold uppercase tracking-wider truncate">Confianza</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-metric">
-          <CardContent className="p-2 sm:pt-4 sm:pb-4 flex items-center gap-2 sm:gap-3">
-            <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+        <Card className="shadow-metric hover:shadow-metric-hover transition-shadow duration-300">
+          <CardContent className="p-2 sm:pt-4 sm:pb-4">
             <div className="min-w-0">
               <p className="text-base sm:text-xl font-extrabold text-navy tabular-nums">
                 {candidates.length ? Math.round((validatedCandidates.length / candidates.length) * 100) : 0}%
               </p>
-              <p className="text-[8px] sm:text-[9px] text-muted-foreground font-semibold uppercase tracking-wider truncate">Panorama</p>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground font-semibold uppercase tracking-wider truncate">Panorama</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-5">
-        <Card className="shadow-card lg:col-span-2">
+        <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300 lg:col-span-2">
           <CardHeader className="p-3 sm:p-6 pb-2">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-primary" />
-              <CardTitle className="text-xs sm:text-sm font-bold text-navy truncate">
-                Distribución scores — {role.name}
-              </CardTitle>
-            </div>
+            <CardTitle className="text-xs sm:text-sm font-bold text-navy truncate">
+              Distribución scores — {role.name}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
             <div className="h-56 sm:h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={distributionData} barCategoryGap="20%">
-                  <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                  <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="4 4" strokeOpacity={0.6} />
                   <XAxis dataKey="range" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} />
                   <YAxis tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} allowDecimals={false} axisLine={false} tickLine={false} width={25} />
-                  <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} />
-                  <Bar dataKey="count" name="Candidatos" radius={0} maxBarSize={48}>
+                  <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'hsl(var(--muted) / 0.3)' }} />
+                  <Bar dataKey="count" name="Candidatos" radius={0} maxBarSize={48} animationDuration={800} animationEasing="ease-out">
                     {distributionData.map((entry, index) => (
                       <Cell key={index} fill={getBarColor(entry.range)} />
                     ))}
@@ -240,18 +218,15 @@ const InsightsView = () => {
           </CardContent>
         </Card>
 
-        <Card className="shadow-card">
+        <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300">
           <CardHeader className="p-3 sm:p-6 pb-2">
-            <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary" />
-              <CardTitle className="text-xs sm:text-sm font-bold text-navy">Pipeline por fases</CardTitle>
-            </div>
+            <CardTitle className="text-xs sm:text-sm font-bold text-navy">Pipeline por fases</CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
             <div className="h-48 sm:h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={pipelineData} cx="50%" cy="50%" innerRadius={35} outerRadius={60} paddingAngle={3} dataKey="value" strokeWidth={0}>
+                  <Pie data={pipelineData} cx="50%" cy="50%" innerRadius={35} outerRadius={60} paddingAngle={4} dataKey="value" strokeWidth={2} stroke="hsl(var(--card))" cornerRadius={0} animationDuration={800} animationEasing="ease-out">
                     {pipelineData.map((entry, index) => (
                       <Cell key={index} fill={entry.fill} />
                     ))}
@@ -259,7 +234,7 @@ const InsightsView = () => {
                   <Tooltip content={<CustomPieTooltip />} />
                   <Legend
                     wrapperStyle={{ fontSize: 9, paddingTop: 4 }}
-                    iconType="square"
+                    iconType="circle"
                     iconSize={7}
                     formatter={(value) => <span className="text-foreground font-medium">{value}</span>}
                   />
@@ -268,7 +243,7 @@ const InsightsView = () => {
             </div>
             <div className="mt-2 text-center">
               <p className="text-xl sm:text-2xl font-extrabold text-navy tabular-nums">{candidates.length}</p>
-              <p className="text-[9px] sm:text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Total candidatos</p>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">Total candidatos</p>
             </div>
           </CardContent>
         </Card>
@@ -277,13 +252,13 @@ const InsightsView = () => {
       <Card className="shadow-card">
         <CardContent className="p-3 sm:pt-5 sm:pb-5 sm:px-6">
           <h3 className="text-xs sm:text-sm font-bold text-navy mb-1.5 sm:mb-2">Metodología de scoring probabilístico</h3>
-          <p className="text-[10px] sm:text-xs text-foreground/65 leading-relaxed">
+          <p className="text-[11px] sm:text-xs text-foreground/70 leading-relaxed">
             El sistema combina dos fuentes de datos: el <strong>score declarativo</strong> (análisis de CV/LinkedIn por IA,
             ponderación 40%) y el <strong>score validado</strong> (sesiones Panorama con telemetría conductual, ponderación 60%).
             La <strong>confianza</strong> refleja cuántos datos validados existen para cada candidato.
             Candidatos sin validación Panorama conservan únicamente su score declarativo con confianza reducida.
           </p>
-          <p className="text-[10px] sm:text-xs text-foreground/65 leading-relaxed mt-2 hidden sm:block">
+          <p className="text-[11px] sm:text-xs text-foreground/70 leading-relaxed mt-2 hidden sm:block">
             Este enfoque dual permite priorizar candidatos con mayor probabilidad real de éxito,
             reducir el sesgo de la información auto-declarada, y concentrar las entrevistas en
             perfiles contrastados científicamente.

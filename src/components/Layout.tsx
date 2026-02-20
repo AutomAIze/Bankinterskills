@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Users, Search, LogOut, User, Trophy, BookOpen, Brain, MessageSquare, Menu, X } from 'lucide-react';
+import { LogOut, User, Menu, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AIAssistant from './AIAssistant';
 
 const navItems = [
-  { to: '/', label: 'Asistente', icon: MessageSquare },
-  { to: '/roles', label: 'Roles', icon: Search },
-  { to: '/ranking', label: 'Ranking', icon: Users },
-  { to: '/shortlist', label: 'Shortlist', icon: Trophy },
-  { to: '/taxonomia', label: 'Taxonomía', icon: BookOpen },
-  { to: '/skills-intelligence', label: 'Intelligence', icon: Brain },
+  { to: '/', label: 'Asistente' },
+  { to: '/roles', label: 'Roles' },
+  { to: '/ranking', label: 'Ranking' },
+  { to: '/shortlist', label: 'Shortlist' },
+  { to: '/taxonomia', label: 'Taxonomía' },
+  { to: '/skills-intelligence', label: 'Intelligence' },
+  { to: '/admin', label: 'Admin' },
 ];
 
 const Layout = () => {
@@ -21,7 +22,7 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-50 bg-navy shadow-card-lg">
+      <header className="sticky top-0 z-50 bg-navy shadow-float backdrop-blur-sm">
         <div className="flex h-12 sm:h-14 items-center justify-between px-3 sm:px-6">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <img
@@ -29,18 +30,17 @@ const Layout = () => {
               alt="Banco Sabadell"
               className="h-4 sm:h-5 w-auto brightness-0 invert shrink-0"
             />
-            <div className="h-4 sm:h-5 w-px bg-white/20 shrink-0 hidden sm:block" />
+            <div className="h-4 sm:h-5 w-px bg-white/15 shrink-0 hidden sm:block" />
             <div className="hidden sm:block">
               <h1 className="text-xs font-semibold text-white leading-tight tracking-wide">
                 Skills Intelligence
               </h1>
-              <p className="text-[9px] text-white/50 font-medium tracking-wider uppercase">
+              <p className="text-[9px] text-white/40 font-medium tracking-wider uppercase">
                 Módulo de Selección
               </p>
             </div>
           </div>
 
-          {/* Desktop nav */}
           <nav className="hidden lg:flex items-center gap-0.5 overflow-x-auto">
             {navItems.map((item) => (
               <NavLink
@@ -48,38 +48,36 @@ const Layout = () => {
                 to={item.to}
                 end={item.to === '/'}
                 className={({ isActive }) =>
-                  `flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium transition-all duration-150 whitespace-nowrap ${
+                  `px-3 py-1.5 text-[11px] font-medium transition-all duration-200 whitespace-nowrap ${
                     isActive
-                      ? 'bg-white/15 text-white border-b-2 border-white'
-                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                      ? 'bg-white/15 text-white shadow-inner-glow'
+                      : 'text-white/50 hover:text-white/90 hover:bg-white/8'
                   }`
                 }
               >
-                <item.icon className="h-3.5 w-3.5" />
                 {item.label}
               </NavLink>
             ))}
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <div className="hidden md:flex items-center gap-2.5 bg-white/8 px-2.5 py-1 border border-white/10">
+            <div className="hidden md:flex items-center gap-2.5 bg-white/8 px-3 py-1.5 border border-white/8">
               <div className="flex h-6 w-6 items-center justify-center bg-white/10">
                 <User className="h-3 w-3 text-white/80" />
               </div>
               <div className="text-right">
                 <p className="text-[11px] font-medium text-white/90 leading-tight">{user?.name}</p>
-                <p className="text-[9px] text-white/40 leading-tight">{user?.role}</p>
+                <p className="text-[9px] text-white/35 leading-tight">{user?.role}</p>
               </div>
             </div>
             <button
               onClick={logout}
-              className="hidden sm:flex h-7 w-7 items-center justify-center text-white/40 hover:bg-white/10 hover:text-white/80 transition-colors"
+              className="hidden sm:flex h-7 w-7 items-center justify-center text-white/35 hover:bg-white/10 hover:text-white/80 transition-all duration-200"
               title="Cerrar sesión"
             >
               <LogOut className="h-3.5 w-3.5" />
             </button>
 
-            {/* Mobile hamburger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden flex h-8 w-8 items-center justify-center text-white/70 hover:bg-white/10 transition-colors"
@@ -89,10 +87,9 @@ const Layout = () => {
           </div>
         </div>
 
-        {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-white/10 bg-navy pb-2">
-            <nav className="flex flex-col">
+          <div className="lg:hidden border-t border-white/8 bg-navy/98 backdrop-blur-sm pb-2">
+            <nav className="flex flex-col py-1">
               {navItems.map((item) => (
                 <NavLink
                   key={item.to}
@@ -100,31 +97,30 @@ const Layout = () => {
                   end={item.to === '/'}
                   onClick={() => setMobileMenuOpen(false)}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all ${
+                    `block px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
                       isActive
                         ? 'bg-white/10 text-white border-l-2 border-white'
-                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                        : 'text-white/50 hover:text-white hover:bg-white/5'
                     }`
                   }
                 >
-                  <item.icon className="h-4 w-4" />
                   {item.label}
                 </NavLink>
               ))}
             </nav>
-            <div className="flex items-center justify-between px-4 pt-3 mt-1 border-t border-white/10">
+            <div className="flex items-center justify-between px-4 pt-3 mt-1 border-t border-white/8">
               <div className="flex items-center gap-2">
                 <div className="flex h-6 w-6 items-center justify-center bg-white/10">
                   <User className="h-3 w-3 text-white/80" />
                 </div>
                 <div>
                   <p className="text-[11px] font-medium text-white/90">{user?.name}</p>
-                  <p className="text-[9px] text-white/40">{user?.role}</p>
+                  <p className="text-[9px] text-white/35">{user?.role}</p>
                 </div>
               </div>
               <button
                 onClick={() => { logout(); setMobileMenuOpen(false); }}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-white/40 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <LogOut className="h-3 w-3" />
                 Salir
@@ -139,7 +135,7 @@ const Layout = () => {
           <Outlet />
         </div>
       ) : (
-        <main className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 flex-1">
+        <main className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 flex-1 animate-fade-in">
           <Outlet />
         </main>
       )}

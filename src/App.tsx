@@ -12,6 +12,7 @@ import CandidateDetailView from "./pages/CandidateDetailView";
 import ShortlistView from "./pages/ShortlistView";
 import TaxonomyView from "./pages/TaxonomyView";
 import SkillsIntelligenceView from "./pages/SkillsIntelligenceView";
+import AdminView from "./pages/AdminView";
 import ChatView from "./pages/ChatView";
 import NotFound from "./pages/NotFound";
 
@@ -53,6 +54,7 @@ const AppRoutes = () => (
       <Route path="/candidato/:candidateId" element={<CandidateDetailView />} />
       <Route path="/taxonomia" element={<TaxonomyView />} />
       <Route path="/skills-intelligence" element={<SkillsIntelligenceView />} />
+      <Route path="/admin" element={<AdminView />} />
     </Route>
     <Route path="*" element={<NotFound />} />
   </Routes>

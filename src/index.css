@@ -1,12 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
 @layer base {
   :root {
-    --background: 216 25% 97%;
+    --background: 220 20% 97%;
     --foreground: 215 40% 12%;
 
     --card: 0 0% 100%;
@@ -18,10 +18,10 @@
     --primary: 218 100% 32%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 216 22% 94%;
+    --secondary: 220 18% 94%;
     --secondary-foreground: 215 40% 20%;
 
-    --muted: 216 18% 92%;
+    --muted: 220 14% 92%;
     --muted-foreground: 215 14% 46%;
 
     --accent: 192 100% 44%;
@@ -30,8 +30,8 @@
     --destructive: 5 58% 44%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 216 20% 88%;
-    --input: 216 20% 88%;
+    --border: 220 16% 90%;
+    --input: 220 16% 90%;
     --ring: 218 100% 32%;
 
     --radius: 0px;
@@ -84,10 +84,11 @@
 
   html {
     overflow-x: hidden;
+    scroll-behavior: smooth;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
   }
 }
 
@@ -122,22 +123,27 @@
   }
 
   .card-elevated {
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
-    border: 1px solid hsl(var(--border));
+    box-shadow:
+      0 0 0 1px hsl(var(--border) / 0.5),
+      0 1px 3px 0 rgb(0 0 0 / 0.04),
+      0 1px 2px -1px rgb(0 0 0 / 0.04);
   }
 
   .card-elevated-lg {
-    box-shadow: 0 4px 16px -2px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04);
-    border: 1px solid hsl(var(--border));
+    box-shadow:
+      0 0 0 1px hsl(var(--border) / 0.3),
+      0 8px 24px -4px rgb(0 0 0 / 0.08),
+      0 2px 6px -2px rgb(0 0 0 / 0.04);
   }
 
   .chart-tooltip {
     background: hsl(var(--card)) !important;
     border: 1px solid hsl(var(--border)) !important;
     border-radius: 0 !important;
-    box-shadow: 0 4px 16px -2px rgb(0 0 0 / 0.08) !important;
+    box-shadow: 0 8px 24px -4px rgb(0 0 0 / 0.12), 0 2px 6px -2px rgb(0 0 0 / 0.06) !important;
     font-size: 0.8125rem !important;
-    padding: 10px 14px !important;
+    padding: 12px 16px !important;
+    backdrop-filter: blur(8px) !important;
   }
 
   .tabular-nums {
@@ -145,31 +151,50 @@
   }
 
   .gradient-teal {
-    background: linear-gradient(135deg, hsl(218, 100%, 32%) 0%, hsl(192, 100%, 38%) 100%);
+    background: linear-gradient(135deg, hsl(218, 100%, 36%) 0%, hsl(192, 100%, 42%) 100%);
   }
 
   .gradient-navy {
-    background: linear-gradient(135deg, hsl(215, 50%, 14%) 0%, hsl(215, 45%, 22%) 100%);
+    background: linear-gradient(135deg, hsl(215, 50%, 16%) 0%, hsl(215, 45%, 24%) 100%);
+  }
+
+  .gradient-shine {
+    background: linear-gradient(135deg, hsl(218, 100%, 36%) 0%, hsl(200, 90%, 44%) 50%, hsl(192, 100%, 42%) 100%);
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
   .animate-fadeIn {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .animate-slideUp {
+    animation: slideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 }
 
 @layer components {
   .recharts-cartesian-grid line {
-    stroke: hsl(var(--border));
-    stroke-dasharray: 3 3;
+    stroke: hsl(var(--border) / 0.6);
+    stroke-dasharray: 4 4;
   }
 
   .recharts-tooltip-wrapper {
     outline: none !important;
+    filter: drop-shadow(0 4px 12px rgb(0 0 0 / 0.08));
   }
 
   .recharts-default-tooltip {
@@ -178,11 +203,21 @@
 
   .recharts-polar-grid-angle line,
   .recharts-polar-grid-concentric path {
-    stroke: hsl(var(--border));
+    stroke: hsl(var(--border) / 0.6);
   }
 
   .recharts-polar-angle-axis-tick-value {
     font-size: 10px;
     fill: hsl(var(--muted-foreground));
+    font-weight: 500;
+  }
+
+  .recharts-legend-item-text {
+    font-weight: 500 !important;
+    letter-spacing: -0.01em;
+  }
+
+  .recharts-active-dot circle {
+    filter: drop-shadow(0 0 4px currentColor);
   }
 }

@@ -1,9 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   fetchRoles, fetchCandidatesForRole, fetchCandidateById, fetchDemoMetrics,
   fetchShortlistForRole, fetchSkillsTaxonomy, fetchSkillClusters, fetchSkillSupplyDemand,
-  fetchRolesDashboard,
+  fetchRolesDashboard, fetchEquivalenceGaps,
 } from '@/lib/queries';
+import {
+  advancePipelineStage, rejectCandidate, requestPanoramaValidation,
+  updateCandidateNotes, setValidatedScore,
+} from '@/lib/mutations';
 
 export function useRoles() {
   return useQuery({
@@ -77,5 +81,72 @@ export function useSkillSupplyDemand() {
     queryKey: ['skillSupplyDemand'],
     queryFn: fetchSkillSupplyDemand,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useEquivalenceGaps() {
+  return useQuery({
+    queryKey: ['equivalenceGaps'],
+    queryFn: fetchEquivalenceGaps,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+function useInvalidateCandidate() {
+  const qc = useQueryClient();
+  return (roleId?: string, candidateId?: string) => {
+    qc.invalidateQueries({ queryKey: ['candidates', roleId] });
+    qc.invalidateQueries({ queryKey: ['rolesDashboard'] });
+    qc.invalidateQueries({ queryKey: ['shortlist', roleId] });
+    if (candidateId) {
+      qc.invalidateQueries({ queryKey: ['candidate', candidateId] });
+    }
+  };
+}
+
+export function useAdvanceStage() {
+  const invalidate = useInvalidateCandidate();
+  return useMutation({
+    mutationFn: (args: { candidateId: string; roleId: string; currentStage: string }) =>
+      advancePipelineStage(args.candidateId, args.roleId, args.currentStage),
+    onSuccess: (_, vars) => invalidate(vars.roleId, vars.candidateId),
+  });
+}
+
+export function useRejectCandidate() {
+  const invalidate = useInvalidateCandidate();
+  return useMutation({
+    mutationFn: (args: { candidateId: string; roleId: string }) =>
+      rejectCandidate(args.candidateId, args.roleId),
+    onSuccess: (_, vars) => invalidate(vars.roleId, vars.candidateId),
+  });
+}
+
+export function useRequestValidation() {
+  const invalidate = useInvalidateCandidate();
+  return useMutation({
+    mutationFn: (args: { candidateId: string; roleId: string }) =>
+      requestPanoramaValidation(args.candidateId, args.roleId),
+    onSuccess: (_, vars) => invalidate(vars.roleId, vars.candidateId),
+  });
+}
+
+export function useUpdateNotes() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { candidateId: string; notes: string }) =>
+      updateCandidateNotes(args.candidateId, args.notes),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['candidate', vars.candidateId] });
+    },
+  });
+}
+
+export function useSetValidatedScore() {
+  const invalidate = useInvalidateCandidate();
+  return useMutation({
+    mutationFn: (args: { candidateId: string; roleId: string; score: number }) =>
+      setValidatedScore(args.candidateId, args.roleId, args.score),
+    onSuccess: (_, vars) => invalidate(vars.roleId, vars.candidateId),
   });
 }

@@ -39,14 +39,14 @@ export interface Candidate {
 }
 
 export const PIPELINE_CONFIG: Record<PipelineStage, { label: string; shortLabel: string; color: string; bgClass: string; textClass: string; borderClass: string }> = {
-  applied:     { label: 'Aplicado',    shortLabel: 'Apl',  color: '#94a3b8', bgClass: 'bg-slate-400',     textClass: 'text-slate-500',     borderClass: 'border-slate-300' },
-  screened:    { label: 'Filtrado',    shortLabel: 'Filt', color: '#3b82f6', bgClass: 'bg-blue-500',      textClass: 'text-blue-600',      borderClass: 'border-blue-300' },
-  validated:   { label: 'Validado',    shortLabel: 'Val',  color: '#0891b2', bgClass: 'bg-cyan-600',      textClass: 'text-cyan-700',      borderClass: 'border-cyan-300' },
-  shortlisted: { label: 'Shortlist',   shortLabel: 'Shl',  color: '#0d9488', bgClass: 'bg-teal-600',      textClass: 'text-teal-700',      borderClass: 'border-teal-300' },
-  interview:   { label: 'Entrevista',  shortLabel: 'Ent',  color: '#003DA5', bgClass: 'bg-primary',       textClass: 'text-primary',       borderClass: 'border-primary/30' },
-  offer:       { label: 'Oferta',      shortLabel: 'Ofe',  color: '#059669', bgClass: 'bg-emerald-600',   textClass: 'text-emerald-700',   borderClass: 'border-emerald-300' },
-  hired:       { label: 'Contratado',  shortLabel: 'Con',  color: '#047857', bgClass: 'bg-emerald-700',   textClass: 'text-emerald-800',   borderClass: 'border-emerald-400' },
-  rejected:    { label: 'Descartado',  shortLabel: 'Desc', color: '#dc2626', bgClass: 'bg-red-600',       textClass: 'text-red-600',       borderClass: 'border-red-300' },
+  applied:     { label: 'Aplicado',    shortLabel: 'Apl',  color: 'hsl(215, 35%, 65%)', bgClass: 'bg-muted-foreground/40', textClass: 'text-muted-foreground',  borderClass: 'border-border' },
+  screened:    { label: 'Filtrado',    shortLabel: 'Filt', color: 'hsl(215, 48%, 52%)', bgClass: 'bg-[hsl(215,48%,52%)]', textClass: 'text-[hsl(215,48%,52%)]', borderClass: 'border-[hsl(215,48%,52%)]/30' },
+  validated:   { label: 'Validado',    shortLabel: 'Val',  color: 'hsl(192, 100%, 38%)', bgClass: 'bg-accent',             textClass: 'text-accent',             borderClass: 'border-accent/30' },
+  shortlisted: { label: 'Shortlist',   shortLabel: 'Shl',  color: 'hsl(205, 75%, 48%)', bgClass: 'bg-[hsl(205,75%,48%)]', textClass: 'text-[hsl(205,75%,48%)]', borderClass: 'border-[hsl(205,75%,48%)]/30' },
+  interview:   { label: 'Entrevista',  shortLabel: 'Ent',  color: 'hsl(218, 100%, 32%)', bgClass: 'bg-primary',            textClass: 'text-primary',            borderClass: 'border-primary/30' },
+  offer:       { label: 'Oferta',      shortLabel: 'Ofe',  color: 'hsl(218, 100%, 26%)', bgClass: 'bg-primary/80',         textClass: 'text-primary/80',         borderClass: 'border-primary/20' },
+  hired:       { label: 'Contratado',  shortLabel: 'Con',  color: 'hsl(215, 50%, 14%)', bgClass: 'bg-navy',               textClass: 'text-navy',               borderClass: 'border-navy/30' },
+  rejected:    { label: 'Descartado',  shortLabel: 'Desc', color: 'hsl(5, 58%, 44%)',   bgClass: 'bg-destructive',        textClass: 'text-destructive',        borderClass: 'border-destructive/30' },
 };
 
 export const PIPELINE_ORDER: PipelineStage[] = ['applied', 'screened', 'validated', 'shortlisted', 'interview', 'offer', 'hired'];

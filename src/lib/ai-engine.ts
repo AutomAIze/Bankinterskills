@@ -5,6 +5,12 @@ interface ChatContext {
   candidateId?: string;
 }
 
+export interface ResponseMeta {
+  roleId?: string;
+  roleName?: string;
+  candidates?: { id: string; name: string; score: number; stage: string }[];
+}
+
 function normalize(s: string): string {
   return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
@@ -51,10 +57,15 @@ const RISK_LABELS: Record<string, string> = {
   high_risk: 'Riesgo alto',
 };
 
+export interface GenerateResult {
+  text: string;
+  meta?: ResponseMeta;
+}
+
 export async function generateResponse(
   question: string,
   context: ChatContext
-): Promise<string> {
+): Promise<GenerateResult> {
   const q = normalize(question);
 
   const { data: roles } = await supabase
@@ -67,67 +78,71 @@ export async function generateResponse(
 
   if (effectiveRoleId) {
     if (matchesIntent(q, ['inteligencia', 'dimension', 'eq', 'iq', 'dq', 'cociente', 'perfil inteligencia', 'soft skill', 'hard skill', 'tipo de inteligencia'])) {
-      return await intelligenceProfileResponse(effectiveRoleId, allRoles);
+      return wrap(await intelligenceProfileResponse(effectiveRoleId, allRoles));
     }
     if (matchesIntent(q, ['compara', 'comparar', 'comparativa', 'diferencia', 'versus', 'vs'])) {
-      return await compareCandidatesResponse(effectiveRoleId, allRoles);
+      return await compareCandidatesWithMeta(effectiveRoleId, allRoles);
     }
     if (matchesIntent(q, ['gap', 'gaps', 'carencia', 'debilidad', 'falta', 'mejorar', 'formacion'])) {
-      return await gapsResponse(effectiveRoleId, allRoles);
+      return wrap(await gapsResponse(effectiveRoleId, allRoles));
     }
     if (matchesIntent(q, ['pipeline', 'fase', 'etapa', 'funnel', 'estado del', 'como esta', 'como van'])) {
-      return await pipelineResponse(effectiveRoleId, allRoles);
+      return wrap(await pipelineResponse(effectiveRoleId, allRoles));
     }
     if (matchesIntent(q, ['confianza', 'validacion', 'validado', 'panorama', 'cientifico', 'declarativo', 'scoring', 'cobertura'])) {
-      return await confidenceResponse(effectiveRoleId, allRoles);
+      return wrap(await confidenceResponse(effectiveRoleId, allRoles));
     }
     if (matchesIntent(q, ['skill', 'competencia', 'modelo de skill', 'peso', 'que necesita', 'que requiere', 'requisitos', 'taxonomia'])) {
-      return await skillModelResponse(effectiveRoleId, allRoles);
+      return wrap(await skillModelResponse(effectiveRoleId, allRoles));
     }
-    return await searchCandidatesResponse(effectiveRoleId, allRoles);
+    return await searchCandidatesWithMeta(effectiveRoleId, allRoles);
   }
 
   if (matchesIntent(q, ['inteligencia', 'dimension', 'eq', 'iq', 'dq', 'cociente', 'soft skill', 'hard skill', 'tipo de inteligencia'])) {
-    return await globalIntelligenceOverview(allRoles);
+    return wrap(await globalIntelligenceOverview(allRoles));
   }
 
   if (matchesIntent(q, ['mejor', 'top', 'quien', 'recomiend', 'recomendado', 'perfil', 'perfiles', 'candidato ideal', 'resumen', 'todas las posiciones', 'todos los roles', 'general'])) {
-    return await allRolesOverview(allRoles);
+    return wrap(await allRolesOverview(allRoles));
   }
 
   if (matchesIntent(q, ['compara', 'comparar', 'comparativa'])) {
-    return await allRolesOverview(allRoles);
+    return wrap(await allRolesOverview(allRoles));
   }
 
   if (matchesIntent(q, ['gap', 'gaps', 'carencia', 'critico'])) {
-    return await gapsResponse(undefined, allRoles);
+    return wrap(await gapsResponse(undefined, allRoles));
   }
 
   if (matchesIntent(q, ['hora', 'ahorro', 'ahorra', 'eficiencia', 'metrica', 'insight', 'precision', 'entrevista irrelevant'])) {
-    return await metricsResponse();
+    return wrap(await metricsResponse());
   }
 
   if (matchesIntent(q, ['pipeline', 'fase', 'etapa', 'funnel', 'estado'])) {
-    return await pipelineResponse(undefined, allRoles);
+    return wrap(await pipelineResponse(undefined, allRoles));
   }
 
   if (matchesIntent(q, ['pendiente', 'sin validar', 'urgente', 'panorama', 'validacion'])) {
-    return await pendingValidationResponse(allRoles);
+    return wrap(await pendingValidationResponse(allRoles));
   }
 
   if (matchesIntent(q, ['rol', 'roles', 'puesto', 'posicion', 'posiciones', 'vacante', 'oferta', 'ofertas', 'que hay abierto'])) {
-    return await rolesOverviewResponse(allRoles);
+    return wrap(await rolesOverviewResponse(allRoles));
   }
 
   if (matchesIntent(q, ['skill', 'competencia', 'modelo', 'taxonomia'])) {
-    return await skillModelResponse(undefined, allRoles);
+    return wrap(await skillModelResponse(undefined, allRoles));
   }
 
   if (matchesIntent(q, ['cuantos candidatos', 'listado', 'ranking', 'pool'])) {
-    return await poolResponse(undefined, allRoles);
+    return wrap(await poolResponse(undefined, allRoles));
   }
 
-  return await generalResponse(allRoles);
+  return wrap(await generalResponse(allRoles));
+}
+
+function wrap(text: string): GenerateResult {
+  return { text };
 }
 
 function matchesIntent(q: string, keywords: string[]): boolean {
@@ -226,6 +241,54 @@ async function searchCandidatesResponse(roleId: string, allRoles: any[]): Promis
   }
 
   return resp;
+}
+
+async function searchCandidatesWithMeta(roleId: string, allRoles: any[]): Promise<GenerateResult> {
+  const text = await searchCandidatesResponse(roleId, allRoles);
+  const role = allRoles.find((r) => r.id === roleId);
+
+  const { data: crs } = await supabase
+    .from('candidate_roles')
+    .select('combined_score, pipeline_stage, candidates(id, full_name)')
+    .eq('role_id', roleId)
+    .order('combined_score', { ascending: false });
+
+  const candidates = (crs ?? []).map((cr: any) => ({
+    id: (cr.candidates as any).id,
+    name: (cr.candidates as any).full_name,
+    score: Math.round(Number(cr.combined_score ?? 0)),
+    stage: cr.pipeline_stage ?? 'applied',
+  }));
+
+  return {
+    text,
+    meta: { roleId, roleName: role?.name, candidates },
+  };
+}
+
+async function compareCandidatesWithMeta(roleId: string, allRoles: any[]): Promise<GenerateResult> {
+  const text = await compareCandidatesResponse(roleId, allRoles);
+  const role = allRoles.find((r) => r.id === roleId);
+
+  const { data: crs } = await supabase
+    .from('candidate_roles')
+    .select('combined_score, pipeline_stage, candidates(id, full_name)')
+    .eq('role_id', roleId)
+    .not('pipeline_stage', 'eq', 'rejected')
+    .order('combined_score', { ascending: false })
+    .limit(6);
+
+  const candidates = (crs ?? []).map((cr: any) => ({
+    id: (cr.candidates as any).id,
+    name: (cr.candidates as any).full_name,
+    score: Math.round(Number(cr.combined_score ?? 0)),
+    stage: cr.pipeline_stage ?? 'applied',
+  }));
+
+  return {
+    text,
+    meta: { roleId, roleName: role?.name, candidates },
+  };
 }
 
 // ─── Intelligence Profile ───────────────────────────────────────────
