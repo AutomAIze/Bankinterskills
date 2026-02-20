@@ -38,6 +38,9 @@ const CandidateDetailView = () => {
 
   const { data: roles = [] } = useRoles();
   const { data, isLoading } = useCandidateDetail(candidateId, roleId);
+  const advanceMut = useAdvanceStage();
+  const rejectMut = useRejectCandidate();
+  const validationMut = useRequestValidation();
 
   if (isLoading) {
     return (
@@ -54,10 +57,6 @@ const CandidateDetailView = () => {
       </div>
     );
   }
-
-  const advanceMut = useAdvanceStage();
-  const rejectMut = useRejectCandidate();
-  const validationMut = useRequestValidation();
 
   const { candidate, role } = data;
   const { label, color } = getScoreLabel(candidate.globalScore);

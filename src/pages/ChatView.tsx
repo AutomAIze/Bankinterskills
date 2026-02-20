@@ -229,38 +229,38 @@ function EmptyState({ onSend }: { onSend: (query: string) => void }) {
   const { data: roles, isLoading } = useRolesDashboard();
 
   return (
-    <div className="flex flex-col items-center justify-center px-4 sm:px-6 py-8 sm:py-12 overflow-y-auto h-full">
-      <div className="max-w-2xl w-full">
-        <div className="text-center mb-8 sm:mb-10">
+    <div className="flex flex-col items-center justify-center px-4 sm:px-6 py-4 sm:py-6 overflow-y-auto h-full">
+      <div className="max-w-3xl w-full">
+        <div className="text-center mb-4 sm:mb-5">
           <img
             src="/sabadell-logo.png"
             alt="Banco Sabadell"
-            className="h-8 sm:h-10 w-auto mb-6 mx-auto"
+            className="h-7 sm:h-8 w-auto mb-3 mx-auto"
           />
-          <h2 className="text-2xl sm:text-3xl font-bold text-navy mb-3 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-navy mb-1.5 tracking-tight">
             Buscador de candidatos
           </h2>
-          <p className="text-sm sm:text-base text-muted-foreground max-w-lg mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
             Busca por posición para consultar candidatos, scores, dimensiones de inteligencia,
             hard skills, soft skills y datos de validación.
           </p>
         </div>
 
         {/* Funcionalidades */}
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+        <p className="text-[10px] font-semibold text-muted-foreground tracking-wider mb-1.5">
           Funcionalidades
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
           {FEATURE_QUERIES.map((item, i) => (
             <button
               key={i}
               onClick={() => onSend(item.query)}
-              className="group p-3.5 sm:p-4 border border-border/60 bg-card text-left hover:border-primary/30 hover:shadow-card-hover transition-all duration-200 active:scale-[0.98]"
+              className="group p-2.5 sm:p-3 border border-border/60 bg-card text-left hover:border-primary/30 hover:shadow-card-hover transition-all duration-200 active:scale-[0.98]"
             >
-              <p className="text-xs font-bold text-navy mb-0.5 group-hover:text-primary transition-colors">
+              <p className="text-[11px] font-bold text-navy mb-0.5 group-hover:text-primary transition-colors leading-tight">
                 {item.label}
               </p>
-              <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
+              <p className="text-[10px] text-muted-foreground leading-snug line-clamp-2">
                 {item.query}
               </p>
             </button>
@@ -268,26 +268,26 @@ function EmptyState({ onSend }: { onSend: (query: string) => void }) {
         </div>
 
         {/* Roles */}
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+        <p className="text-[10px] font-semibold text-muted-foreground tracking-wider mb-1.5">
           Roles
         </p>
         {isLoading ? (
-          <div className="flex justify-center py-6">
+          <div className="flex justify-center py-4">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             {(roles ?? []).map((role) => (
               <button
                 key={role.id}
                 onClick={() => onSend(`¿Quiénes son los mejores candidatos para ${role.name}?`)}
-                className="group p-3.5 sm:p-4 border border-border/60 bg-card text-left hover:border-primary/30 hover:shadow-card-hover transition-all duration-200 active:scale-[0.98]"
+                className="group p-2.5 sm:p-3 border border-border/60 bg-card text-left hover:border-primary/30 hover:shadow-card-hover transition-all duration-200 active:scale-[0.98]"
               >
-                <p className="text-xs font-bold text-navy mb-0.5 group-hover:text-primary transition-colors">
+                <p className="text-[11px] font-bold text-navy mb-0.5 group-hover:text-primary transition-colors leading-tight">
                   {role.name}
                 </p>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  {role.totalCandidates} candidatos · {role.unit}
+                <p className="text-[10px] text-muted-foreground leading-snug">
+                  {role.totalCandidates} cand. · {role.unit}
                 </p>
               </button>
             ))}

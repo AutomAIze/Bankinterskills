@@ -132,12 +132,12 @@ export async function fetchRolesDashboard(): Promise<RoleDashboard[]> {
         const ss = skillStats.find((s: any) => s.role_id === r.id);
         if (!ss) return null;
         return {
-          tktTotal: ss.tkt_total,
-          tktWithEquiv: ss.tkt_with_equiv,
-          clientTotal: ss.client_total,
-          clientWithEquiv: ss.client_with_equiv,
-          gapsAgente: ss.gaps_agente,
-          gapsCliente: ss.gaps_cliente,
+          tktTotal: Number(ss.tkt_total ?? 0),
+          tktWithEquiv: Number(ss.tkt_with_equiv ?? 0),
+          clientTotal: Number(ss.client_total ?? 0),
+          clientWithEquiv: Number(ss.client_with_equiv ?? 0),
+          gapsAgente: Number(ss.gaps_agente ?? 0),
+          gapsCliente: Number(ss.gaps_cliente ?? 0),
         };
       })(),
     };

@@ -214,11 +214,11 @@ const RolView = () => {
                     <div className="flex-1 h-1.5 bg-muted overflow-hidden">
                       <div
                         className="h-full bg-accent transition-all duration-500"
-                        style={{ width: `${Math.round((role.skillStats.clientWithEquiv / role.skillStats.clientTotal) * 100)}%` }}
+                        style={{ width: `${role.skillStats.clientTotal > 0 ? Math.round((role.skillStats.clientWithEquiv / role.skillStats.clientTotal) * 100) : 0}%` }}
                       />
                     </div>
                     <span className="text-[10px] font-semibold text-accent tabular-nums">
-                      {Math.round((role.skillStats.clientWithEquiv / role.skillStats.clientTotal) * 100)}% cobertura
+                      {role.skillStats.clientTotal > 0 ? Math.round((role.skillStats.clientWithEquiv / role.skillStats.clientTotal) * 100) : 0}% cobertura
                     </span>
                   </div>
                 </div>
