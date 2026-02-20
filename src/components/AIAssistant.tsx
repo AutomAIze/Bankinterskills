@@ -9,9 +9,9 @@ interface Message {
 }
 
 const SUGGESTED_PROMPTS = [
-  '¿Quién es el mejor candidato para Gestor Oficina Empresas?',
-  'Compara los candidatos para Analista de Riesgo',
-  '¿Qué gaps de skills hay en Banca Personal?',
+  '¿Quién es el mejor candidato para Ventas Comercial?',
+  'Compara los candidatos para Análisis Riesgo Crédito',
+  '¿Qué gaps de skills hay en Estrategia?',
   '¿Cuántas horas ahorra el sistema?',
 ];
 

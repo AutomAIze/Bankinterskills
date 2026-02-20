@@ -4,6 +4,7 @@ import { Bot, Loader2, Trash2, ArrowUp, RotateCcw, ExternalLink } from 'lucide-r
 import { generateResponse } from '@/lib/ai-engine';
 import type { ResponseMeta } from '@/lib/ai-engine';
 import ValidationPanel from '@/components/ValidationPanel';
+import { useRolesDashboard } from '@/hooks/useSkillsData';
 
 interface Message {
   id: string;
@@ -197,34 +198,36 @@ const ChatView = () => {
 
 /* ─── Empty State ──────────────────────────────────────────────────── */
 
-const SUGGESTED_QUERIES = [
+const FEATURE_QUERIES = [
   {
-    label: 'Gestor Oficina Empresas',
-    query: '¿Quiénes son los mejores candidatos para Gestor Oficina Empresas?',
-  },
-  {
-    label: 'Analista de Riesgo',
-    query: 'Muéstrame el ranking de candidatos para Analista de Riesgo de Crédito',
+    label: 'Ranking de candidatos',
+    query: '¿Quiénes son los mejores candidatos para este rol?',
   },
   {
     label: 'Dimensiones de inteligencia',
-    query: '¿Cuáles son las dimensiones de inteligencia de los candidatos para Banca Personal?',
+    query: '¿Cuáles son las dimensiones de inteligencia de los candidatos?',
   },
   {
     label: 'Validación Panorama',
-    query: '¿Qué candidatos tienen validación Panorama para Gestor Oficina Empresas?',
+    query: '¿Qué candidatos tienen validación Panorama?',
   },
   {
     label: 'Shortlist y recomendaciones',
-    query: '¿Cuál es el shortlist recomendado para Analista de Riesgo?',
+    query: '¿Cuál es el shortlist recomendado?',
   },
   {
     label: 'Gaps de competencias',
-    query: '¿Qué gaps de skills hay en los candidatos de Banca Personal?',
+    query: '¿Qué gaps de skills hay en los candidatos?',
+  },
+  {
+    label: 'Equivalencias de skills',
+    query: '¿Qué equivalencias existen entre el modelo Sabadell y ESCO?',
   },
 ];
 
 function EmptyState({ onSend }: { onSend: (query: string) => void }) {
+  const { data: roles, isLoading } = useRolesDashboard();
+
   return (
     <div className="flex flex-col items-center justify-center px-4 sm:px-6 py-8 sm:py-12 overflow-y-auto h-full">
       <div className="max-w-2xl w-full">
@@ -243,8 +246,12 @@ function EmptyState({ onSend }: { onSend: (query: string) => void }) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
-          {SUGGESTED_QUERIES.map((item, i) => (
+        {/* Funcionalidades */}
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+          Funcionalidades
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 mb-6">
+          {FEATURE_QUERIES.map((item, i) => (
             <button
               key={i}
               onClick={() => onSend(item.query)}
@@ -259,6 +266,33 @@ function EmptyState({ onSend }: { onSend: (query: string) => void }) {
             </button>
           ))}
         </div>
+
+        {/* Roles */}
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+          Roles
+        </p>
+        {isLoading ? (
+          <div className="flex justify-center py-6">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
+            {(roles ?? []).map((role) => (
+              <button
+                key={role.id}
+                onClick={() => onSend(`¿Quiénes son los mejores candidatos para ${role.name}?`)}
+                className="group p-3.5 sm:p-4 border border-border/60 bg-card text-left hover:border-primary/30 hover:shadow-card-hover transition-all duration-200 active:scale-[0.98]"
+              >
+                <p className="text-xs font-bold text-navy mb-0.5 group-hover:text-primary transition-colors">
+                  {role.name}
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {role.totalCandidates} candidatos · {role.unit}
+                </p>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

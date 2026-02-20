@@ -4,7 +4,7 @@ import { PIPELINE_CONFIG, PIPELINE_ORDER } from '@/data/mockData';
 import type { PipelineStage } from '@/data/mockData';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  Loader2, ArrowRight,
+  Loader2, ArrowRight, Brain, Building2, AlertTriangle,
 } from 'lucide-react';
 
 function ConfidenceBar({ value, size = 'sm' }: { value: number; size?: 'sm' | 'md' }) {
@@ -189,6 +189,40 @@ const RolView = () => {
                 </p>
                 <ConfidenceBar value={role.avgConfidence} size="md" />
               </div>
+
+              {role.skillStats && (
+                <div className="mt-3 pt-3 border-t">
+                  <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-2">Equivalencia de Skills</p>
+                  <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/8 border border-primary/15">
+                      <Brain className="h-3 w-3 text-primary" />
+                      <span className="text-[11px] font-bold text-primary tabular-nums">{role.skillStats.tktWithEquiv}</span>
+                      <span className="text-[10px] text-muted-foreground">Skills TKT</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-navy/5 border border-navy/15">
+                      <Building2 className="h-3 w-3 text-navy" />
+                      <span className="text-[11px] font-bold text-navy tabular-nums">{role.skillStats.clientWithEquiv}</span>
+                      <span className="text-[10px] text-muted-foreground">Skills Cliente</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-warning/8 border border-warning/15">
+                      <AlertTriangle className="h-3 w-3 text-warning" />
+                      <span className="text-[11px] font-bold text-warning tabular-nums">{role.skillStats.gapsAgente + role.skillStats.gapsCliente}</span>
+                      <span className="text-[10px] text-muted-foreground">Sin equiv.</span>
+                    </div>
+                  </div>
+                  <div className="mt-1.5 flex items-center gap-3">
+                    <div className="flex-1 h-1.5 bg-muted overflow-hidden">
+                      <div
+                        className="h-full bg-accent transition-all duration-500"
+                        style={{ width: `${Math.round((role.skillStats.clientWithEquiv / role.skillStats.clientTotal) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] font-semibold text-accent tabular-nums">
+                      {Math.round((role.skillStats.clientWithEquiv / role.skillStats.clientTotal) * 100)}% cobertura
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {role.topCandidate && (
                 <div className="mt-3 flex items-center gap-2 bg-secondary/30 border px-2 sm:px-3 py-2 flex-wrap">

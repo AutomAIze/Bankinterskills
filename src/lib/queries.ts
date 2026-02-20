@@ -45,6 +45,15 @@ export async function fetchRoles(): Promise<Role[]> {
 
 // ─── Role Dashboard (summary per role for positions overview) ───────
 
+export interface RoleSkillStats {
+  tktTotal: number;
+  tktWithEquiv: number;
+  clientTotal: number;
+  clientWithEquiv: number;
+  gapsAgente: number;
+  gapsCliente: number;
+}
+
 export interface RoleDashboard {
   id: string;
   name: string;
@@ -63,13 +72,15 @@ export interface RoleDashboard {
   validatedPercent: number;
   topCandidate: { name: string; score: number } | null;
   skills: Array<{ name: string; weight: number }>;
+  skillStats: RoleSkillStats | null;
 }
 
 export async function fetchRolesDashboard(): Promise<RoleDashboard[]> {
-  const [rolesRes, rsRes, crRes] = await Promise.all([
+  const [rolesRes, rsRes, crRes, statsRes] = await Promise.all([
     supabase.from('roles').select('id, name, business_unit, description, positions_count, declarative_weight, scientific_weight'),
     supabase.from('role_skills').select('role_id, weight, skills(name)'),
     supabase.from('candidate_roles').select('role_id, declarative_score, validated_score, combined_score, confidence, pipeline_stage, candidates(full_name)'),
+    supabase.from('role_skill_stats').select('role_id, tkt_total, tkt_with_equiv, client_total, client_with_equiv, gaps_agente, gaps_cliente'),
   ]);
 
   if (rolesRes.error) throw rolesRes.error;
@@ -77,6 +88,7 @@ export async function fetchRolesDashboard(): Promise<RoleDashboard[]> {
   const roles = rolesRes.data ?? [];
   const roleSkills = rsRes.data ?? [];
   const candidateRoles = crRes.data ?? [];
+  const skillStats = statsRes.data ?? [];
 
   return roles.map((r) => {
     const crs = candidateRoles.filter((cr: any) => cr.role_id === r.id);
@@ -116,6 +128,18 @@ export async function fetchRolesDashboard(): Promise<RoleDashboard[]> {
         .filter((rs: any) => rs.role_id === r.id)
         .map((rs: any) => ({ name: (rs.skills as any).name as string, weight: Math.round(rs.weight * 100) }))
         .sort((a, b) => b.weight - a.weight),
+      skillStats: (() => {
+        const ss = skillStats.find((s: any) => s.role_id === r.id);
+        if (!ss) return null;
+        return {
+          tktTotal: ss.tkt_total,
+          tktWithEquiv: ss.tkt_with_equiv,
+          clientTotal: ss.client_total,
+          clientWithEquiv: ss.client_with_equiv,
+          gapsAgente: ss.gaps_agente,
+          gapsCliente: ss.gaps_cliente,
+        };
+      })(),
     };
   });
 }
