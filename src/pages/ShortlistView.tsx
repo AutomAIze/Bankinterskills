@@ -4,13 +4,8 @@ import { getScoreLabel, PIPELINE_CONFIG } from '@/data/mockData';
 import type { PipelineStage } from '@/data/mockData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Loader2, ArrowRight, Eye,
-} from 'lucide-react';
-import {
-  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
-  ResponsiveContainer, Legend, Tooltip,
-} from 'recharts';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Loader2, ArrowRight } from 'lucide-react';
 import type { ShortlistCandidate } from '@/lib/queries';
 
 const RECOMMENDATION_CONFIG = {
@@ -37,19 +32,11 @@ const RECOMMENDATION_CONFIG = {
   },
 } as const;
 
-const CustomRadarTooltip = ({ active, payload }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="chart-tooltip">
-      <p className="font-semibold text-foreground text-xs mb-1">{payload[0]?.payload?.skill}</p>
-      {payload.map((p: any) => (
-        <p key={p.name} className="text-xs text-muted-foreground">
-          {p.name}: <span className="font-semibold text-foreground">{p.value}</span>
-        </p>
-      ))}
-    </div>
-  );
-};
+function getStockPhotoUrl(candidateId: string): string {
+  const hash = candidateId.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
+  const num = Math.abs(hash % 70) + 1;
+  return `https://i.pravatar.cc/96?img=${num}`;
+}
 
 function StageBadge({ stage }: { stage: PipelineStage }) {
   const cfg = PIPELINE_CONFIG[stage];
@@ -77,147 +64,67 @@ function DualScoreBadge({ declarative, validated, combined }: { declarative: num
   );
 }
 
-function ConfidenceBar({ value }: { value: number }) {
-  const pct = Math.round(value * 100);
-  const color = pct >= 75 ? 'bg-score-high' : pct >= 50 ? 'bg-score-medium' : 'bg-score-low';
-  return (
-    <div className="flex items-center gap-1.5">
-      <div className="w-12 sm:w-16 h-1.5 bg-muted overflow-hidden">
-        <div className={`h-full ${color} transition-all duration-500`} style={{ width: `${pct}%` }} />
-      </div>
-      <span className="text-[11px] font-bold tabular-nums text-muted-foreground">{pct}%</span>
-    </div>
-  );
-}
-
 function CandidateCard({ candidate, rank, onViewDetail }: { candidate: ShortlistCandidate; rank: number; onViewDetail: () => void }) {
   const rec = RECOMMENDATION_CONFIG[candidate.recommendation];
   const { color } = getScoreLabel(candidate.combinedScore);
   const scoreBg = color === 'high' ? 'bg-score-high' : color === 'medium' ? 'bg-score-medium' : 'bg-score-low';
-
-  const radarData = candidate.skills.slice(0, 8).map((s) => ({
-    skill: s.name.length > 18 ? s.name.slice(0, 16) + '...' : s.name,
-    fullName: s.name,
-    Candidato: s.level,
-    Rol: s.expected,
-  }));
+  const confPct = Math.round(candidate.confidence * 100);
 
   return (
-    <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300 overflow-hidden">
-      <CardHeader className="p-3 sm:p-4 pb-3 border-b bg-secondary/20">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className={`flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center text-xs font-extrabold text-white shrink-0 ${rank <= 3 ? 'gradient-shine' : 'bg-muted-foreground'}`}>
+    <Card
+      className="shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden cursor-pointer group"
+      onClick={onViewDetail}
+    >
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <Avatar className="h-11 w-11 shrink-0 ring-2 ring-background">
+              <AvatarImage src={getStockPhotoUrl(candidate.id)} alt={candidate.name} className="object-cover" />
+              <AvatarFallback className="text-xs font-bold text-muted-foreground">
+                {candidate.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+            <div className={`flex h-7 w-7 shrink-0 items-center justify-center text-[10px] font-extrabold text-white ${rank <= 3 ? 'gradient-shine' : 'bg-muted-foreground'}`}>
               {rank}
             </div>
-            <div className="min-w-0">
-              <CardTitle className="text-[13px] sm:text-sm font-bold text-navy">{candidate.name}</CardTitle>
-              <div className="flex items-center gap-2 sm:gap-3 mt-0.5 flex-wrap">
-                <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium">
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-sm font-bold text-navy truncate">{candidate.name}</CardTitle>
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                <span className="text-[11px] text-muted-foreground font-medium truncate">
                   {candidate.currentPosition || 'Sin puesto actual'}
                 </span>
                 <StageBadge stage={candidate.pipelineStage} />
+                <span className={`sm:hidden inline-flex items-center px-2 py-0.5 text-[10px] font-semibold tracking-wide ${rec.badge}`}>
+                  {candidate.recommendation === 'hire' ? 'Entrevista' : candidate.recommendation === 'potential' ? 'Potencial' : 'Bajo'}
+                </span>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-auto">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap sm:flex-nowrap">
             <DualScoreBadge declarative={candidate.declarativeScore} validated={candidate.validatedScore} combined={candidate.combinedScore} />
-            <span className={`inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 text-sm font-extrabold text-white ${scoreBg}`}>
+            <span className={`inline-flex items-center justify-center w-10 h-10 text-sm font-extrabold text-white shrink-0 ${scoreBg}`}>
               {candidate.combinedScore}
             </span>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="p-3 sm:pt-4 sm:px-6 space-y-3 sm:space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-secondary/20 border px-2 sm:px-3 py-2">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Confianza</span>
-            <ConfidenceBar value={candidate.confidence} />
-          </div>
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold tracking-wide ${rec.badge} self-start sm:self-auto`}>
-            {candidate.recommendation === 'hire' ? 'Entrevista' : candidate.recommendation === 'potential' ? 'Potencial' : 'Bajo'}
-          </span>
-        </div>
-
-        {candidate.notes && (
-          <div className="flex items-start gap-2 bg-secondary/30 border p-2 sm:p-2.5">
-            <p className="text-[11px] sm:text-xs text-foreground/75 leading-relaxed">{candidate.notes}</p>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Comparativa de Skills</h4>
-            </div>
-            <div className="h-44 sm:h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="65%">
-                  <PolarGrid stroke="hsl(var(--border))" gridType="polygon" strokeOpacity={0.6} />
-                  <PolarAngleAxis dataKey="skill" tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} />
-                  <Radar name="Candidato" dataKey="Candidato" stroke="hsl(192, 100%, 38%)" fill="hsl(192, 100%, 38%)" fillOpacity={0.2} strokeWidth={2} dot={{ r: 2.5, fill: 'hsl(192, 100%, 38%)', strokeWidth: 0 }} animationDuration={600} />
-                  <Radar name="Rol requerido" dataKey="Rol" stroke="hsl(218, 100%, 32%)" fill="hsl(218, 100%, 32%)" fillOpacity={0.05} strokeWidth={1.5} strokeDasharray="4 3" dot={{ r: 2, fill: 'hsl(218, 100%, 32%)', strokeWidth: 0 }} animationDuration={600} />
-                  <Tooltip content={<CustomRadarTooltip />} />
-                  <Legend wrapperStyle={{ fontSize: 9, paddingTop: 4 }} iconType="circle" iconSize={7} />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Detalle por Skill</h4>
-            <div className="space-y-1.5">
-              {candidate.skills.map((s) => {
-                const status = s.gap >= 0 ? 'above' : s.gap >= -10 ? 'aligned' : 'below';
-                return (
-                  <div key={s.name} className="flex items-center gap-1.5 sm:gap-2">
-                    <span className="w-24 sm:w-40 text-[11px] sm:text-xs font-medium text-foreground leading-tight" title={s.name}>{s.name}</span>
-                    <div className="flex-1 h-1.5 bg-muted overflow-hidden relative">
-                      <div className={`h-full transition-all duration-500 ${status === 'above' ? 'bg-score-high' : status === 'aligned' ? 'bg-score-medium' : 'bg-score-low'}`} style={{ width: `${s.level}%` }} />
-                      <div className="absolute top-0 h-full w-0.5 bg-navy/50" style={{ left: `${s.expected}%` }} />
-                    </div>
-                    <span className="text-[10px] sm:text-[11px] text-muted-foreground w-9 sm:w-11 text-right tabular-nums font-semibold">{s.level}/{s.expected}</span>
-                    <span className="w-3.5">
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-          {candidate.strengths.length > 0 && (
-            <div className="border border-accent/15 bg-accent/[0.03] p-2 sm:p-2.5">
-              <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-[10px] font-bold text-accent uppercase tracking-wider">Fortalezas</span>
+            <span className={`hidden sm:inline-flex items-center px-2 py-0.5 text-[11px] font-semibold tracking-wide shrink-0 ${rec.badge}`}>
+              {candidate.recommendation === 'hire' ? 'Entrevista' : candidate.recommendation === 'potential' ? 'Potencial' : 'Bajo'}
+            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="w-10 sm:w-12 h-1.5 bg-muted overflow-hidden">
+                <div
+                  className={`h-full transition-all ${confPct >= 75 ? 'bg-score-high' : confPct >= 50 ? 'bg-score-medium' : 'bg-score-low'}`}
+                  style={{ width: `${confPct}%` }}
+                />
               </div>
-              <p className="text-[11px] sm:text-xs text-foreground/75 leading-relaxed">{candidate.strengths.join(', ')}</p>
+              <span className="text-[10px] font-bold tabular-nums text-muted-foreground w-7 sm:w-8">{confPct}%</span>
             </div>
-          )}
-          {candidate.gaps.length > 0 && (
-            <div className="border border-destructive/15 bg-destructive/[0.03] p-2 sm:p-2.5">
-              <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-[10px] font-bold text-destructive uppercase tracking-wider">Gaps</span>
-              </div>
-              <p className="text-[11px] sm:text-xs text-foreground/75 leading-relaxed">{candidate.gaps.join(', ')}</p>
-            </div>
-          )}
-        </div>
-
-        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border p-2 sm:p-3 ${rec.bg}`}>
-          <div className="flex items-center gap-2">
-            <span className={`text-[11px] sm:text-xs font-semibold ${rec.text}`}>{rec.label}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); onViewDetail(); }}
+              className="flex items-center gap-1.5 bg-navy px-3 py-1.5 text-[10px] font-bold text-white hover:opacity-90 transition-all duration-200 tracking-wide shrink-0 group-hover:bg-navy/90 active:scale-[0.98] ml-auto sm:ml-0"
+            >
+              Ver detalle
+              <ArrowRight className="h-3 w-3" />
+            </button>
           </div>
-          <button
-            onClick={onViewDetail}
-            className="flex items-center gap-1.5 bg-navy px-3 py-1.5 text-[10px] font-bold text-white hover:opacity-90 transition-all duration-200 tracking-wide w-full sm:w-auto justify-center sm:justify-start active:scale-[0.98]"
-          >
-            Ver detalle completo
-            <ArrowRight className="h-3 w-3" />
-          </button>
         </div>
       </CardContent>
     </Card>
