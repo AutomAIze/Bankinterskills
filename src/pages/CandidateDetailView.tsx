@@ -1,9 +1,14 @@
+import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { getScoreLabel, PIPELINE_CONFIG } from '@/data/mockData';
+import { getScoreLabel, PIPELINE_CONFIG, PIPELINE_ORDER } from '@/data/mockData';
 import type { PipelineStage } from '@/data/mockData';
-import { useRoles, useCandidateDetail, useAdvanceStage, useRejectCandidate, useRequestValidation } from '@/hooks/useSkillsData';
+import { useRoles, useCandidateDetail, useAdvanceStage, useRejectCandidate, useRequestValidation, useAiEvaluation, useHrAdequacy } from '@/hooks/useSkillsData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, UserCheck, FolderOpen, XCircle, Loader2, ShieldCheck } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { SkillCard } from '@/components/SkillCard';
+import { AIEvaluationModal } from '@/components/AIEvaluationModal';
+import { Slider } from '@/components/ui/slider';
+import { ArrowLeft, UserCheck, FolderOpen, XCircle, Loader2, ShieldCheck, Bot, Users } from 'lucide-react';
 import {
   RadarChart,
   PolarGrid,
@@ -12,9 +17,36 @@ import {
   Radar,
   ResponsiveContainer,
   Legend,
-  Tooltip,
+  Tooltip as RechartsTooltip,
 } from 'recharts';
 import { toast } from 'sonner';
+
+function HrAdequacySlider({
+  initialValue,
+  onSave,
+  isPending,
+}: {
+  initialValue: number;
+  onSave: (pct: number) => void;
+  isPending: boolean;
+}) {
+  const [value, setValue] = useState(initialValue);
+  useEffect(() => setValue(initialValue), [initialValue]);
+  return (
+    <div className="flex items-center gap-3">
+      <Slider
+        value={[value]}
+        onValueChange={([v]) => setValue(v)}
+        onValueCommit={([v]) => onSave(v)}
+        max={100}
+        step={5}
+        className="flex-1"
+      />
+      <span className="text-sm font-bold tabular-nums w-12">{value}%</span>
+      {isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+    </div>
+  );
+}
 
 const CustomRadarTooltip = ({ active, payload }: any) => {
   if (!active || !payload?.length) return null;
@@ -36,11 +68,14 @@ const CandidateDetailView = () => {
   const navigate = useNavigate();
   const roleId = searchParams.get('role') || undefined;
 
+  const [aiModalOpen, setAiModalOpen] = useState(false);
   const { data: roles = [] } = useRoles();
   const { data, isLoading } = useCandidateDetail(candidateId, roleId);
+  const { data: aiEval } = useAiEvaluation(candidateId, roleId);
   const advanceMut = useAdvanceStage();
   const rejectMut = useRejectCandidate();
   const validationMut = useRequestValidation();
+  const hrAdequacyMut = useHrAdequacy();
 
   if (isLoading) {
     return (
@@ -125,16 +160,66 @@ const CandidateDetailView = () => {
           </div>
         </div>
 
+        {/* Pipeline de fases */}
+        <div className="mt-3 sm:mt-4 p-2 sm:p-3 border border-border/60 bg-muted/30">
+          <p className="text-[10px] font-semibold text-muted-foreground mb-2">Pipeline</p>
+          <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
+            {(['applied', 'screened', 'validated', 'shortlisted', 'interview'] as const).map((stage) => {
+              const cfg = PIPELINE_CONFIG[stage];
+              const isActive = candidate.pipelineStage === stage;
+              const isPast = PIPELINE_ORDER.indexOf(candidate.pipelineStage) > PIPELINE_ORDER.indexOf(stage);
+              const isValidationStage = stage === 'validated';
+              if (!cfg) return null;
+              return (
+                <Tooltip key={stage}>
+                  <TooltipTrigger asChild>
+                    <span
+                      className={`inline-flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-[11px] font-bold border transition-colors ${
+                        isActive ? `${cfg.bgClass} ${cfg.textClass} border-current` : isPast ? 'bg-muted text-muted-foreground border-border' : 'bg-background text-muted-foreground/70 border-border'
+                      }`}
+                    >
+                      {isValidationStage && (
+                        <ShieldCheck className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                      )}
+                      {cfg.shortLabel}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[200px]">
+                    <p className="font-semibold">{cfg.label}</p>
+                    {isValidationStage && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Validación por Panorama: evaluación científica de soft skills
+                      </p>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="flex flex-col items-center">
               <span className="text-[10px] text-muted-foreground font-medium">CV</span>
               <span className="text-sm font-bold text-navy tabular-nums">{candidate.declarativeScore}</span>
             </div>
-            <div className="flex flex-col items-center">
-              <span className="text-[10px] text-muted-foreground font-medium">Panorama</span>
-              <span className="text-sm font-bold text-navy tabular-nums">{candidate.validatedScore ?? '—'}</span>
-            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex flex-col items-center cursor-help">
+                  <span className="text-[10px] text-muted-foreground font-medium inline-flex items-center gap-0.5">
+                    <ShieldCheck className="h-2.5 w-2.5" /> Panorama
+                  </span>
+                  <span className="text-sm font-bold text-navy tabular-nums">{candidate.validatedScore ?? '—'}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="font-semibold">Validación Panorama</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Evaluación científica de soft skills
+                </p>
+              </TooltipContent>
+            </Tooltip>
           </div>
           <div className="h-8 w-px bg-border" />
           <div className="text-right">
@@ -201,7 +286,7 @@ const CandidateDetailView = () => {
                       dot={{ r: 2, fill: 'hsl(218, 100%, 32%)', strokeWidth: 1, stroke: 'white' }}
                       animationDuration={600}
                     />
-                    <Tooltip content={<CustomRadarTooltip />} />
+                    <RechartsTooltip content={<CustomRadarTooltip />} />
                     <Legend
                       wrapperStyle={{ fontSize: 10, paddingTop: 8 }}
                       iconType="circle"
@@ -216,38 +301,15 @@ const CandidateDetailView = () => {
           <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300">
             <CardHeader className="p-3 sm:p-6 pb-2">
               <CardTitle className="text-xs sm:text-sm font-bold text-navy">Detalle de skills</CardTitle>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Las soft skills se destacan; son evaluables por Panorama y futura IA
+              </p>
             </CardHeader>
             <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
-              <div className="space-y-2 sm:space-y-2.5">
-                {candidate.skills.map((s) => {
-                  const diff = s.level - s.expected;
-                  const status = diff >= 0 ? 'above' : diff >= -10 ? 'aligned' : 'below';
-                  return (
-                    <div key={s.name} className="flex items-center gap-2 sm:gap-3">
-                      <span className="w-28 sm:w-44 text-[11px] sm:text-xs font-medium text-foreground leading-tight" title={s.name}>{s.name}</span>
-                      <div className="flex-1 flex items-center gap-1.5 sm:gap-2">
-                        <div className="flex-1 h-1.5 sm:h-2 bg-muted overflow-hidden relative">
-                          <div
-                            className={`h-full transition-all duration-500 ${
-                              status === 'above' ? 'bg-score-high' : status === 'aligned' ? 'bg-score-medium' : 'bg-score-low'
-                            }`}
-                            style={{ width: `${s.level}%` }}
-                          />
-                          <div
-                            className="absolute top-0 h-full w-0.5 bg-navy/50"
-                            style={{ left: `${s.expected}%` }}
-                            title={`Esperado: ${s.expected}`}
-                          />
-                        </div>
-                        <span className="text-[10px] sm:text-[11px] text-muted-foreground w-7 sm:w-8 text-right tabular-nums font-semibold">{s.level}</span>
-                        <span className="text-[10px] sm:text-[11px] text-muted-foreground">/</span>
-                        <span className="text-[10px] sm:text-[11px] text-muted-foreground w-7 sm:w-8 tabular-nums">{s.expected}</span>
-                      </div>
-                      <span className="w-4">
-                      </span>
-                    </div>
-                  );
-                })}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
+                {candidate.skills.map((s) => (
+                  <SkillCard key={s.name} skill={s} />
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -308,24 +370,118 @@ const CandidateDetailView = () => {
             </CardContent>
           </Card>
 
+          {/* Evaluación IA */}
+          <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300">
+            <CardHeader className="p-3 sm:p-6 pb-2">
+              <CardTitle className="text-xs sm:text-sm font-bold text-navy flex items-center gap-1.5">
+                <Bot className="h-3.5 w-3.5 text-accent" />
+                Evaluación IA
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0 space-y-3">
+              {aiEval ? (
+                <>
+                  {aiEval.conversationSummary && (
+                    <p className="text-[11px] sm:text-xs text-foreground/75 leading-relaxed">
+                      {aiEval.conversationSummary}
+                    </p>
+                  )}
+                  {aiEval.strengths?.length > 0 && (
+                    <div className="border border-accent/15 bg-accent/[0.03] p-2.5 sm:p-3">
+                      <p className="text-[10px] font-bold text-accent mb-1">Puntos fuertes (soft skills)</p>
+                      <p className="text-[11px] text-foreground/75">{aiEval.strengths.join(', ')}</p>
+                    </div>
+                  )}
+                  {aiEval.weaknesses?.length > 0 && (
+                    <div className="border border-destructive/15 bg-destructive/[0.03] p-2.5 sm:p-3">
+                      <p className="text-[10px] font-bold text-destructive mb-1">Puntos débiles</p>
+                      <p className="text-[11px] text-foreground/75">{aiEval.weaknesses.join(', ')}</p>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground">Adecuación:</span>
+                    <span className="text-[11px] font-bold text-accent">
+                      {aiEval.adequacyLevel ?? '—'} {aiEval.adequacyScore != null && `(${aiEval.adequacyScore}%)`}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="border border-dashed border-border/60 p-3 sm:p-4 text-center">
+                  <p className="text-[11px] text-muted-foreground mb-2">
+                    Evaluación escrita por IA para valorar soft skills
+                  </p>
+                  <button
+                    onClick={() => setAiModalOpen(true)}
+                    className="text-[11px] sm:text-xs font-semibold text-accent hover:underline"
+                  >
+                    Iniciar evaluación IA
+                  </button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Validación RRHH */}
+          {['shortlisted', 'interview', 'offer', 'hired'].includes(candidate.pipelineStage) && (
+            <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300">
+              <CardHeader className="p-3 sm:p-6 pb-2">
+                <CardTitle className="text-xs sm:text-sm font-bold text-navy flex items-center gap-1.5">
+                  <Users className="h-3.5 w-3.5 text-primary" />
+                  Validación RRHH
+                </CardTitle>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Control final: adecuación asignada por Recursos Humanos
+                </p>
+              </CardHeader>
+              <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0 space-y-3">
+                <HrAdequacySlider
+                  initialValue={candidate.hrAdequacyPercentage ?? 0}
+                  onSave={(pct) =>
+                    hrAdequacyMut.mutate(
+                      { candidateId: candidate.id, roleId: role.id, percentage: pct },
+                      { onSuccess: () => toast.success('Adecuación RRHH guardada') }
+                    )
+                  }
+                  isPending={hrAdequacyMut.isPending}
+                />
+                {(candidate.declarativeScore !== candidate.globalScore || candidate.hrAdequacyPercentage != null) && (
+                  <p className="text-[10px] text-muted-foreground">
+                    CV: {candidate.declarativeScore} · Combinado: {candidate.globalScore}
+                    {candidate.hrAdequacyPercentage != null && ` · RRHH: ${candidate.hrAdequacyPercentage}%`}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300">
             <CardHeader className="p-3 sm:p-6 pb-2">
               <CardTitle className="text-xs sm:text-sm font-bold text-navy">Acciones</CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0 space-y-2">
               {candidate.validatedScore == null && (
-                <button
-                  onClick={() => validationMut.mutate(
-                    { candidateId: candidate.id, roleId: role.id },
-                    { onSuccess: () => toast.success(`Sesión Panorama solicitada para ${candidate.name}`),
-                      onError: () => toast.error(`Error al solicitar validación`) }
-                  )}
-                  disabled={validationMut.isPending}
-                  className="w-full flex items-center gap-2 sm:gap-3 border border-accent/20 bg-accent/5 p-2.5 sm:p-3 text-[11px] sm:text-xs font-semibold text-accent hover:bg-accent/10 transition-all duration-200 active:scale-[0.99] disabled:opacity-50"
-                >
-                  <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-accent" />
-                  {validationMut.isPending ? 'Solicitando...' : 'Solicitar validación Panorama'}
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => validationMut.mutate(
+                        { candidateId: candidate.id, roleId: role.id },
+                        { onSuccess: () => toast.success(`Sesión Panorama solicitada para ${candidate.name}`),
+                          onError: () => toast.error(`Error al solicitar validación`) }
+                      )}
+                      disabled={validationMut.isPending}
+                      className="w-full flex items-center gap-2 sm:gap-3 border border-accent/20 bg-accent/5 p-2.5 sm:p-3 text-[11px] sm:text-xs font-semibold text-accent hover:bg-accent/10 transition-all duration-200 active:scale-[0.99] disabled:opacity-50"
+                    >
+                      <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-accent" />
+                      {validationMut.isPending ? 'Solicitando...' : 'Solicitar validación Panorama'}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[220px]">
+                    <p className="font-semibold">Validación Panorama</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      El icono de escudo indica evaluación científica de soft skills mediante Panorama
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
               )}
               {candidate.pipelineStage !== 'interview' && candidate.pipelineStage !== 'rejected' && (
                 <button
@@ -364,6 +520,16 @@ const CandidateDetailView = () => {
           </Card>
         </div>
       </div>
+
+      <AIEvaluationModal
+        open={aiModalOpen}
+        onOpenChange={setAiModalOpen}
+        candidateId={candidate.id}
+        candidateName={candidate.name}
+        roleId={role.id}
+        roleName={role.name}
+        onSaved={() => {}}
+      />
     </div>
   );
 };

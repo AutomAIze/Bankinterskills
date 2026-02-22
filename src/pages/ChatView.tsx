@@ -5,6 +5,7 @@ import { generateResponse } from '@/lib/ai-engine';
 import type { ResponseMeta } from '@/lib/ai-engine';
 import ValidationPanel from '@/components/ValidationPanel';
 import { useRolesDashboard } from '@/hooks/useSkillsData';
+import { ConnectionErrorBanner } from '@/components/ConnectionErrorBanner';
 
 interface Message {
   id: string;
@@ -226,11 +227,14 @@ const FEATURE_QUERIES = [
 ];
 
 function EmptyState({ onSend }: { onSend: (query: string) => void }) {
-  const { data: roles, isLoading } = useRolesDashboard();
+  const { data: roles, isLoading, isError, refetch } = useRolesDashboard();
 
   return (
     <div className="flex flex-col items-center justify-center px-4 sm:px-6 py-4 sm:py-6 overflow-y-auto h-full">
       <div className="max-w-3xl w-full">
+        {isError && (
+          <ConnectionErrorBanner onRetry={() => refetch()} className="mb-4" />
+        )}
         <div className="text-center mb-4 sm:mb-5">
           <img
             src="/sabadell-logo.png"

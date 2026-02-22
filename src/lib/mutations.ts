@@ -85,3 +85,42 @@ export async function setValidatedScore(
   if (error) throw error;
   return { combined, confidence };
 }
+
+export async function setHrAdequacy(candidateId: string, roleId: string, percentage: number) {
+  const { error } = await supabase
+    .from('candidate_roles')
+    .update({ hr_adequacy_percentage: Math.round(percentage) })
+    .eq('candidate_id', candidateId)
+    .eq('role_id', roleId);
+
+  if (error) throw error;
+}
+
+export interface AiEvaluationInput {
+  candidateId: string;
+  roleId: string;
+  conversationSummary: string;
+  strengths: string[];
+  weaknesses: string[];
+  adequacyLevel: string;
+  adequacyScore: number;
+}
+
+export async function saveAiEvaluation(input: AiEvaluationInput) {
+  const { error } = await supabase
+    .from('ai_evaluation_results')
+    .upsert(
+      {
+        candidate_id: input.candidateId,
+        role_id: input.roleId,
+        conversation_summary: input.conversationSummary,
+        strengths: input.strengths,
+        weaknesses: input.weaknesses,
+        adequacy_level: input.adequacyLevel,
+        adequacy_score: input.adequacyScore,
+      },
+      { onConflict: 'candidate_id, role_id' }
+    );
+
+  if (error) throw error;
+}

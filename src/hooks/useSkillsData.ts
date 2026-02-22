@@ -2,11 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   fetchRoles, fetchCandidatesForRole, fetchCandidateById, fetchDemoMetrics,
   fetchShortlistForRole, fetchSkillsTaxonomy, fetchSkillClusters, fetchSkillSupplyDemand,
-  fetchRolesDashboard, fetchEquivalenceGaps,
+  fetchRolesDashboard, fetchEquivalenceGaps, fetchAiEvaluation,
 } from '@/lib/queries';
 import {
   advancePipelineStage, rejectCandidate, requestPanoramaValidation,
-  updateCandidateNotes, setValidatedScore,
+  updateCandidateNotes, setValidatedScore, setHrAdequacy, saveAiEvaluation,
 } from '@/lib/mutations';
 
 export function useRoles() {
@@ -148,5 +148,33 @@ export function useSetValidatedScore() {
     mutationFn: (args: { candidateId: string; roleId: string; score: number }) =>
       setValidatedScore(args.candidateId, args.roleId, args.score),
     onSuccess: (_, vars) => invalidate(vars.roleId, vars.candidateId),
+  });
+}
+
+export function useHrAdequacy() {
+  const invalidate = useInvalidateCandidate();
+  return useMutation({
+    mutationFn: (args: { candidateId: string; roleId: string; percentage: number }) =>
+      setHrAdequacy(args.candidateId, args.roleId, args.percentage),
+    onSuccess: (_, vars) => invalidate(vars.roleId, vars.candidateId),
+  });
+}
+
+export function useAiEvaluation(candidateId: string | undefined, roleId: string | undefined) {
+  return useQuery({
+    queryKey: ['aiEvaluation', candidateId, roleId],
+    queryFn: () => fetchAiEvaluation(candidateId!, roleId!),
+    enabled: !!candidateId && !!roleId,
+  });
+}
+
+export function useSaveAiEvaluation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: saveAiEvaluation,
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['aiEvaluation', vars.candidateId, vars.roleId] });
+      qc.invalidateQueries({ queryKey: ['candidate', vars.candidateId] });
+    },
   });
 }

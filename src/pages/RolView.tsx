@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   Loader2, ArrowRight, Brain, Building2, AlertTriangle,
 } from 'lucide-react';
+import { ConnectionErrorBanner } from '@/components/ConnectionErrorBanner';
 
 function ConfidenceBar({ value, size = 'sm' }: { value: number; size?: 'sm' | 'md' }) {
   const pct = Math.round(value * 100);
@@ -75,12 +76,21 @@ function PipelineBar({ pipeline, total }: { pipeline: Record<string, number>; to
 
 const RolView = () => {
   const navigate = useNavigate();
-  const { data: roles = [], isLoading } = useRolesDashboard();
+  const { data: roles = [], isLoading, isError, refetch } = useRolesDashboard();
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-lg sm:text-xl font-bold text-navy tracking-tight">Gestión de Posiciones</h2>
+        <ConnectionErrorBanner onRetry={() => refetch()} />
       </div>
     );
   }

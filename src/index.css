@@ -82,6 +82,17 @@
     overflow-x: hidden;
   }
 
+  @media (min-width: 1280px) {
+    html {
+      font-size: 16px;
+    }
+  }
+  @media (min-width: 1536px) {
+    html {
+      font-size: 17px;
+    }
+  }
+
   html {
     overflow-x: hidden;
     scroll-behavior: smooth;

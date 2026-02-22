@@ -1,7 +1,8 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, QueryCache } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Layout from "./components/Layout";
@@ -16,7 +17,28 @@ import AdminView from "./pages/AdminView";
 import ChatView from "./pages/ChatView";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error) => {
+      const msg = String(error?.message ?? '');
+      const isNetwork = /fetch|network|connection|failed to fetch|ERR_NETWORK|load failed/i.test(msg);
+      const isSupabasePaused = /paused|project.*inactive|restore/i.test(msg);
+      if (isNetwork || isSupabasePaused) {
+        toast.error(
+          isSupabasePaused
+            ? "Proyecto Supabase pausado. Entra al Dashboard y restaura el proyecto."
+            : "Error de conexión. Comprueba tu internet o el estado del proyecto Supabase."
+        );
+      }
+    },
+  }),
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    },
+  },
+});
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();

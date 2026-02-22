@@ -177,16 +177,19 @@ export async function fetchCandidatesForRole(roleId: string): Promise<Candidate[
 
   const { data: rsRows, error: rsErr } = await supabase
     .from('role_skills')
-    .select('skill_id, weight, required_level, skills(name)')
+    .select('skill_id, weight, required_level, skills(name, hr_dimension)')
     .eq('role_id', roleId);
 
   if (rsErr) throw rsErr;
 
-  const roleSkillMap = new Map<string, { weight: number; required_level: number }>();
+  const roleSkillMap = new Map<string, { weight: number; required_level: number; skillType: 'soft' | 'hard' }>();
   for (const rs of rsRows ?? []) {
+    const dim = (rs.skills as any)?.hr_dimension ?? '';
+    const skillType: 'soft' | 'hard' = dim.startsWith('soft_') ? 'soft' : 'hard';
     roleSkillMap.set((rs.skills as any).name, {
       weight: Math.round(rs.weight * 100),
       required_level: scaleLevel(rs.required_level),
+      skillType,
     });
   }
 
@@ -201,6 +204,7 @@ export async function fetchCandidatesForRole(roleId: string): Promise<Candidate[
           name: skillName,
           level: scaleLevel(cs.level),
           expected: roleSkill?.required_level ?? 0,
+          skillType: roleSkill?.skillType,
         } satisfies CandidateSkill;
       })
       .filter((cs) => roleSkillMap.has(cs.name))
@@ -242,7 +246,7 @@ export async function fetchCandidateById(
 
   const crQuery = supabase
     .from('candidate_roles')
-    .select('role_id, fit_score, status, declarative_score, validated_score, combined_score, confidence, pipeline_stage')
+    .select('role_id, fit_score, status, declarative_score, validated_score, combined_score, confidence, pipeline_stage, hr_adequacy_percentage')
     .eq('candidate_id', candidateId);
 
   if (roleId) crQuery.eq('role_id', roleId);
@@ -255,16 +259,19 @@ export async function fetchCandidateById(
   const [rolesRes, csRes, rsRes] = await Promise.all([
     supabase.from('roles').select('id, name, business_unit, description, positions_count, declarative_weight, scientific_weight').eq('id', effectiveRoleId).single(),
     supabase.from('candidate_skills').select('level, skills(name)').eq('candidate_id', candidateId),
-    supabase.from('role_skills').select('weight, required_level, skills(name)').eq('role_id', effectiveRoleId),
+    supabase.from('role_skills').select('weight, required_level, skills(name, hr_dimension)').eq('role_id', effectiveRoleId),
   ]);
 
   if (rolesRes.error || !rolesRes.data) return null;
 
-  const roleSkillMap = new Map<string, { weight: number; required_level: number }>();
+  const roleSkillMap = new Map<string, { weight: number; required_level: number; skillType: 'soft' | 'hard' }>();
   for (const rs of rsRes.data ?? []) {
+    const dim = (rs.skills as any)?.hr_dimension ?? '';
+    const skillType: 'soft' | 'hard' = dim.startsWith('soft_') ? 'soft' : 'hard';
     roleSkillMap.set((rs.skills as any).name, {
       weight: Math.round(rs.weight * 100),
       required_level: scaleLevel(rs.required_level),
+      skillType,
     });
   }
 
@@ -272,7 +279,12 @@ export async function fetchCandidateById(
     .map((cs: any) => {
       const skillName = (cs.skills as any).name as string;
       const roleSkill = roleSkillMap.get(skillName);
-      return { name: skillName, level: scaleLevel(cs.level), expected: roleSkill?.required_level ?? 0 };
+      return {
+        name: skillName,
+        level: scaleLevel(cs.level),
+        expected: roleSkill?.required_level ?? 0,
+        skillType: roleSkill?.skillType,
+      };
     })
     .filter((cs) => roleSkillMap.has(cs.name))
     .sort((a, b) => {
@@ -307,6 +319,7 @@ export async function fetchCandidateById(
     pipelineStage: (crs.pipeline_stage ?? 'applied') as PipelineStage,
     skills: candidateSkills,
     status: STATUS_MAP[crs.status] ?? 'nuevo',
+    hrAdequacyPercentage: crs.hr_adequacy_percentage != null ? Number(crs.hr_adequacy_percentage) : null,
   };
 
   return { candidate, role };
@@ -356,7 +369,7 @@ export interface ShortlistCandidate {
   confidence: number;
   pipelineStage: PipelineStage;
   status: string;
-  skills: Array<{ name: string; level: number; expected: number; weight: number; gap: number }>;
+  skills: Array<{ name: string; level: number; expected: number; weight: number; gap: number; skillType?: 'soft' | 'hard' }>;
   strengths: string[];
   gaps: string[];
   recommendation: 'hire' | 'potential' | 'pass';
@@ -383,15 +396,21 @@ export async function fetchShortlistForRole(roleId: string): Promise<ShortlistCa
 
   const [csRes, rsRes] = await Promise.all([
     supabase.from('candidate_skills').select('candidate_id, level, skills(name)').in('candidate_id', candidateIds),
-    supabase.from('role_skills').select('skill_id, weight, required_level, skills(name)').eq('role_id', roleId),
+    supabase.from('role_skills').select('skill_id, weight, required_level, skills(name, hr_dimension)').eq('role_id', roleId),
   ]);
 
   if (csRes.error) throw csRes.error;
   if (rsRes.error) throw rsRes.error;
 
-  const roleSkillMap = new Map<string, { weight: number; required_level: number }>();
+  const roleSkillMap = new Map<string, { weight: number; required_level: number; skillType: 'soft' | 'hard' }>();
   for (const rs of rsRes.data ?? []) {
-    roleSkillMap.set((rs.skills as any).name, { weight: Math.round(rs.weight * 100), required_level: scaleLevel(rs.required_level) });
+    const dim = (rs.skills as any)?.hr_dimension ?? '';
+    const skillType: 'soft' | 'hard' = dim.startsWith('soft_') ? 'soft' : 'hard';
+    roleSkillMap.set((rs.skills as any).name, {
+      weight: Math.round(rs.weight * 100),
+      required_level: scaleLevel(rs.required_level),
+      skillType,
+    });
   }
 
   return (crs ?? []).map((cr: any) => {
@@ -405,7 +424,14 @@ export async function fetchShortlistForRole(roleId: string): Promise<ShortlistCa
         const roleSkill = roleSkillMap.get(skillName);
         const level = scaleLevel(cs.level);
         const expected = roleSkill?.required_level ?? 0;
-        return { name: skillName, level, expected, weight: roleSkill?.weight ?? 0, gap: level - expected };
+        return {
+          name: skillName,
+          level,
+          expected,
+          weight: roleSkill?.weight ?? 0,
+          gap: level - expected,
+          skillType: roleSkill?.skillType,
+        };
       })
       .filter((cs) => roleSkillMap.has(cs.name))
       .sort((a, b) => b.weight - a.weight);
@@ -613,4 +639,42 @@ export async function fetchEquivalenceGaps(): Promise<EquivalenceGap[]> {
     externalId: g.external_id,
     detail: g.detail,
   }));
+}
+
+// ─── AI Evaluation ─────────────────────────────────────────────────
+
+export interface AiEvaluationResult {
+  id: string;
+  candidateId: string;
+  roleId: string;
+  conversationSummary: string | null;
+  strengths: string[];
+  weaknesses: string[];
+  adequacyLevel: string | null;
+  adequacyScore: number | null;
+  createdAt: string;
+}
+
+export async function fetchAiEvaluation(candidateId: string, roleId: string): Promise<AiEvaluationResult | null> {
+  const { data, error } = await supabase
+    .from('ai_evaluation_results')
+    .select('*')
+    .eq('candidate_id', candidateId)
+    .eq('role_id', roleId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    candidateId: data.candidate_id,
+    roleId: data.role_id,
+    conversationSummary: data.conversation_summary,
+    strengths: data.strengths ?? [],
+    weaknesses: data.weaknesses ?? [],
+    adequacyLevel: data.adequacy_level,
+    adequacyScore: data.adequacy_score != null ? Number(data.adequacy_score) : null,
+    createdAt: data.created_at,
+  };
 }

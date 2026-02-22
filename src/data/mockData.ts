@@ -18,6 +18,8 @@ export interface CandidateSkill {
   name: string;
   level: number;
   expected: number;
+  /** 'soft' | 'hard' - from hr_dimension in DB */
+  skillType?: 'soft' | 'hard';
 }
 
 export type CandidateStatus = 'nuevo' | 'recomendado' | 'descartado' | 'en_pool';
@@ -36,6 +38,8 @@ export interface Candidate {
   pipelineStage: PipelineStage;
   skills: CandidateSkill[];
   status: CandidateStatus;
+  /** Adecuación asignada por RRHH (0-100%) */
+  hrAdequacyPercentage?: number | null;
 }
 
 export const PIPELINE_CONFIG: Record<PipelineStage, { label: string; shortLabel: string; color: string; bgClass: string; textClass: string; borderClass: string }> = {

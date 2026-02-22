@@ -6,6 +6,7 @@ import { useRoles, useCandidatesForRole, useAdvanceStage, useRejectCandidate, us
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Eye, X, Loader2, Filter, ShieldCheck, ChevronRight,
 } from 'lucide-react';
@@ -103,12 +104,22 @@ function MobileCard({ candidate, role, navigate, onAction }: { candidate: Candid
           <Eye className="h-3 w-3" /> Ver
         </button>
         {candidate.validatedScore == null && (
-          <button
-            onClick={() => onAction(candidate, 'validate')}
-            className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-semibold text-accent border hover:bg-accent/5 transition-colors"
-          >
-            <ShieldCheck className="h-3 w-3" /> Validar
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => onAction(candidate, 'validate')}
+                className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-semibold text-accent border hover:bg-accent/5 transition-colors"
+              >
+                <ShieldCheck className="h-3 w-3" /> Validar
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="font-semibold">Validación Panorama</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Evaluación científica de soft skills
+              </p>
+            </TooltipContent>
+          </Tooltip>
         )}
         <button
           onClick={() => onAction(candidate, 'discard')}
@@ -316,13 +327,22 @@ const RankingView = () => {
                       <Eye className="h-3.5 w-3.5" />
                     </button>
                     {c.validatedScore == null && (
-                      <button
-                        onClick={() => handleAction(c, 'validate')}
-                        className="p-1.5 text-muted-foreground hover:bg-accent/10 hover:text-accent transition-colors"
-                        title="Solicitar validación Panorama"
-                      >
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                      </button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => handleAction(c, 'validate')}
+                            className="p-1.5 text-muted-foreground hover:bg-accent/10 hover:text-accent transition-colors"
+                          >
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="font-semibold">Validación Panorama</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Evaluación científica de soft skills
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                     {c.pipelineStage !== 'interview' && c.pipelineStage !== 'rejected' && (
                       <button
