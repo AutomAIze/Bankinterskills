@@ -32,10 +32,17 @@ const RECOMMENDATION_CONFIG = {
   },
 } as const;
 
-function getStockPhotoUrl(candidateId: string): string {
-  const hash = candidateId.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
-  const num = Math.abs(hash % 70) + 1;
-  return `https://i.pravatar.cc/96?img=${num}`;
+// Fotos corporativas locales: 1,3,4,5 mujeres | 2 = hombre (para Javier)
+const CORPORATE_PHOTOS = ['/images/corporate-1.png', '/images/corporate-2.png', '/images/corporate-3.png', '/images/corporate-4.png', '/images/corporate-5.png'];
+const PHOTO_MAN = CORPORATE_PHOTOS[1]; // corporate-2
+const PHOTOS_OTHERS = [CORPORATE_PHOTOS[0], CORPORATE_PHOTOS[2], CORPORATE_PHOTOS[3], CORPORATE_PHOTOS[4]]; // 1,3,4,5
+
+function getStockPhotoUrl(candidate: { id: string; name: string }, shortlist: { id: string; name: string }[]): string {
+  const isJavier = candidate.name.toLowerCase().includes('javier');
+  if (isJavier) return PHOTO_MAN;
+  const nonJavier = shortlist.filter((c) => !c.name.toLowerCase().includes('javier'));
+  const myOrder = nonJavier.findIndex((c) => c.id === candidate.id);
+  return PHOTOS_OTHERS[myOrder % PHOTOS_OTHERS.length];
 }
 
 function StageBadge({ stage }: { stage: PipelineStage }) {
@@ -64,7 +71,7 @@ function DualScoreBadge({ declarative, validated, combined }: { declarative: num
   );
 }
 
-function CandidateCard({ candidate, rank, onViewDetail }: { candidate: ShortlistCandidate; rank: number; onViewDetail: () => void }) {
+function CandidateCard({ candidate, rank, shortlist, onViewDetail }: { candidate: ShortlistCandidate; rank: number; shortlist: ShortlistCandidate[]; onViewDetail: () => void }) {
   const rec = RECOMMENDATION_CONFIG[candidate.recommendation];
   const { color } = getScoreLabel(candidate.combinedScore);
   const scoreBg = color === 'high' ? 'bg-score-high' : color === 'medium' ? 'bg-score-medium' : 'bg-score-low';
@@ -79,7 +86,7 @@ function CandidateCard({ candidate, rank, onViewDetail }: { candidate: Shortlist
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <Avatar className="h-11 w-11 shrink-0 ring-2 ring-background">
-              <AvatarImage src={getStockPhotoUrl(candidate.id)} alt={candidate.name} className="object-cover" />
+              <AvatarImage src={getStockPhotoUrl(candidate, shortlist)} alt={candidate.name} className="object-cover object-[center_20%]" />
               <AvatarFallback className="text-xs font-bold text-muted-foreground">
                 {candidate.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
               </AvatarFallback>
@@ -254,6 +261,7 @@ const ShortlistView = () => {
               key={candidate.id}
               candidate={candidate}
               rank={i + 1}
+              shortlist={shortlist}
               onViewDetail={() => navigate(`/candidato/${candidate.id}?role=${candidate.roleId}`)}
             />
           ))}
