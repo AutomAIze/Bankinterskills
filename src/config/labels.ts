@@ -15,9 +15,9 @@ export const navLabels = {
 
 export const loginLabels = {
   heroTagline: brandConfig.platformName,
-  heroTitle: "Gestión integral del talento",
+  heroTitle: "Cuadro de mando integrado del talento",
   heroSubtitle:
-    "Plataforma RRHH 360 para conectar desempeño, potencial, formación, sucesión y objetivos del bonus.",
+    "Conecta CSOD, Sopra y M50 en una sola vista: desempeño, potencial, objetivos de bonus, sucesión, recomendaciones de formación y acciones de desarrollo.",
   accessTitle: "Iniciar sesión",
   accessSubtitle: "Accede a la plataforma de talento",
   demoAccess: "Acceso demo",
@@ -27,7 +27,7 @@ export const chatLabels = {
   footerSignature: `${brandConfig.platformName} · ${brandConfig.clientName}`,
   emptyStateTitle: "Asistente de talento",
   emptyStateSubtitle:
-    "Consulta indicadores de trayectoria, evaluación, formación, sucesión y objetivos importados.",
+    "Consulta datos integrados de CSOD, Sopra y M50: cuadro de mando, desempeño, potencial, objetivos bonus, sucesión, formación y trayectorias.",
 } as const;
 
 export const integrationLabels = {

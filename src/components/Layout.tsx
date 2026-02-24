@@ -33,7 +33,7 @@ const Layout = () => {
             <img
               src={brandConfig.logoWhitePath}
               alt={brandConfig.logoAlt}
-              className="h-4 sm:h-5 w-auto shrink-0"
+              className="h-7 w-7 sm:h-8 sm:w-8 shrink-0 object-contain rounded-md"
             />
             <div className="h-4 sm:h-5 w-px bg-white/15 shrink-0 hidden sm:block" />
             <div className="hidden sm:block">

@@ -90,10 +90,13 @@ const TalentDashboardView = () => {
     <div className="space-y-5">
       <div>
         <h2 className="text-lg sm:text-xl font-bold text-navy tracking-tight">
-          Cuadro de Mando Integrado de Talento
+          Cuadro de mando integrado de talento
         </h2>
         <p className="text-xs text-muted-foreground mt-0.5">
           {brandConfig.clientName} · Visión 360 de desempeño, potencial, formación, sucesión, objetivos y trayectorias
+        </p>
+        <p className="text-[10px] text-muted-foreground/70 mt-1 font-medium">
+          Fuentes: CSOD (desempeño) · Sopra (potencial) · M50 (objetivos bonus)
         </p>
       </div>
 

@@ -44,7 +44,7 @@ const LoginPage = () => {
             <img
               src={brandConfig.logoWhitePath}
               alt={brandConfig.logoAlt}
-              className="h-10 w-auto"
+              className="h-11 w-11 object-contain rounded-lg"
             />
           </div>
 
@@ -61,10 +61,10 @@ const LoginPage = () => {
 
             <div className="mt-12 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-white/8 pt-6">
               {[
-                { title: 'Evaluación y potencial', desc: 'Desempeño sostenido · 9-box · readiness' },
-                { title: 'Formación basada en gaps', desc: 'Recomendaciones automáticas por brecha' },
-                { title: 'Sucesión y riesgo', desc: 'Cobertura de puestos clave · bench' },
-                { title: 'Objetivos y bonus', desc: 'Importación M50 · seguimiento on-track' },
+                { title: 'Recomendaciones de formación', desc: 'Desde evaluaciones CSOD y Sopra' },
+                { title: 'BI integrado del talento', desc: 'Cuadro de mando único · sin PPTs' },
+                { title: 'Objetivos bonus', desc: 'Importados de M50 · on track / at risk' },
+                { title: 'Acciones y trayectorias', desc: 'Activación y skills profesionales' },
               ].map((f, i) => (
                 <div key={i} className="group">
                   <p className="text-[11px] font-semibold text-white leading-tight">{f.title}</p>
@@ -86,7 +86,7 @@ const LoginPage = () => {
             <img
               src={brandConfig.logoPath}
               alt={brandConfig.logoAlt}
-              className="h-7 w-auto"
+              className="h-9 w-9 object-contain rounded-lg"
             />
           </div>
 

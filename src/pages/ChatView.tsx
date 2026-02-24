@@ -233,7 +233,7 @@ function EmptyState({ onSend }: { onSend: (query: string) => void }) {
           <img
             src={brandConfig.logoPath}
             alt={brandConfig.logoAlt}
-            className="h-7 sm:h-8 w-auto mb-3 mx-auto"
+            className="h-10 w-10 sm:h-11 sm:w-11 object-contain rounded-lg mb-3 mx-auto"
           />
           <h2 className="text-xl sm:text-2xl font-bold text-navy mb-1.5 tracking-tight">
             {chatLabels.emptyStateTitle}
