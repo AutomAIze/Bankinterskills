@@ -1,5 +1,13 @@
 # Runbook de Carga y Reproceso (Batch RRHH)
 
+## 0) Datos sintéticos (demo)
+Para entornos de demostración sin datos reales, ejecuta la migración de seed:
+```bash
+supabase db push
+# o aplicar manualmente: supabase/migrations/20260224_150000_hr_synthetic_seed.sql
+```
+Inserta 24 empleados, evaluaciones, potencial, objetivos bonus, acciones de desarrollo, riesgo sucesorio y trayectorias profesionales. La app siempre consulta la base de datos; no hay fallback en memoria.
+
 ## 1) Preparación
 - Verifica `.env` con `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
 - Confirma que el esquema RRHH está migrado (`supabase/migrations/20260224_120000_hr_360_schema.sql`).

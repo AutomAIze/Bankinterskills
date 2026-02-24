@@ -9,10 +9,6 @@ import {
   fetchSuccessionRiskSnapshots,
   syncTrainingRecommendationsToActions,
 } from "./queries";
-import {
-  addMockDevelopmentActions,
-  updateMockActionStatus,
-} from "@/data/mockHrData";
 
 type JsonLike = Record<string, unknown>;
 
@@ -38,14 +34,10 @@ export async function runHrAutomations(): Promise<{
   });
 
   if (newActions.length) {
-    try {
-      const { error } = await supabase
-        .from("hr_development_actions")
-        .upsert(newActions as JsonLike[], { onConflict: "id" });
-      if (error) throw error;
-    } catch {
-      addMockDevelopmentActions(newActions);
-    }
+    const { error } = await supabase
+      .from("hr_development_actions")
+      .upsert(newActions as JsonLike[], { onConflict: "id" });
+    if (error) throw error;
   }
 
   const syncedRecommendations = await syncTrainingRecommendationsToActions();
@@ -76,13 +68,9 @@ export async function updateDevelopmentActionStatus(
   actionId: string,
   status: DevelopmentAction["status"],
 ): Promise<void> {
-  try {
-    const { error } = await supabase
-      .from("hr_development_actions")
-      .update({ status })
-      .eq("id", actionId);
-    if (error) throw error;
-  } catch {
-    updateMockActionStatus(actionId, status);
-  }
+  const { error } = await supabase
+    .from("hr_development_actions")
+    .update({ status })
+    .eq("id", actionId);
+  if (error) throw error;
 }
