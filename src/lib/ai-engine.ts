@@ -68,6 +68,29 @@ export async function generateResponse(
 ): Promise<GenerateResult> {
   const q = normalize(question);
 
+  // RRHH 360 intents (global)
+  if (matchesIntent(q, ['cuadro de mando', 'talento 360', 'vision integrada', 'vision completa', 'trayectoria', 'rrhh'])) {
+    return wrap(await integratedTalentResponse());
+  }
+  if (matchesIntent(q, ['formacion', 'formación', 'upskilling', 'reskilling', 'plan de desarrollo', 'recomendacion formativa'])) {
+    return wrap(await trainingRecommendationsResponse());
+  }
+  if (matchesIntent(q, ['objetivo', 'bonus', 'm50', 'on track', 'at risk'])) {
+    return wrap(await bonusObjectivesResponse());
+  }
+  if (matchesIntent(q, ['sucesion', 'sucesorio', 'sucesoria', 'riesgo sucesorio', 'bench', 'readiness'])) {
+    return wrap(await successionRiskResponse());
+  }
+  if (matchesIntent(q, ['trayectoria profesional', 'trayectorias', 'career path', 'movilidad'])) {
+    return wrap(await careerPathsResponse());
+  }
+  if (matchesIntent(q, ['accion automatica', 'automatizacion', 'automatizaciones', 'acciones pendientes', 'workflow'])) {
+    return wrap(await automationStatusResponse());
+  }
+  if (matchesIntent(q, ['desempeno', 'desempeño', 'potencial', 'high potential', '9box'])) {
+    return wrap(await performancePotentialResponse());
+  }
+
   const { data: roles } = await supabase
     .from('roles')
     .select('id, name, business_unit, description, positions_count, declarative_weight, scientific_weight');
@@ -706,6 +729,221 @@ async function metricsResponse(): Promise<string> {
   return resp;
 }
 
+// ─── RRHH 360 responses ──────────────────────────────────────────────
+
+async function integratedTalentResponse(): Promise<string> {
+  const { data: rows, error } = await supabase
+    .from('hr_integrated_talent_dashboard_v')
+    .select('*')
+    .order('sustained_performance_score', { ascending: false })
+    .limit(50);
+
+  if (error || !rows?.length) {
+    return 'No hay datos integrados de talento disponibles todavía. Importa primero fuentes CSOD/Sopra/M50 desde Admin.';
+  }
+
+  const total = rows.length;
+  const sustained = rows.filter((r: any) => Number(r.sustained_performance_score ?? 0) >= 75).length;
+  const highPotential = rows.filter((r: any) => Number(r.potential_score ?? 0) >= 70).length;
+  const highRiskSuccession = rows.filter((r: any) => (r.readiness ?? '') === 'not_ready').length;
+  const onTrackRate = Math.round(
+    rows.reduce((sum: number, r: any) => {
+      const totalObj = Number(r.objectives_total ?? 0);
+      const onTrack = Number(r.objectives_on_track ?? 0);
+      return sum + (totalObj > 0 ? onTrack / totalObj : 0);
+    }, 0) / total * 100
+  );
+
+  let resp = '## Cuadro de mando integrado de talento\n\n';
+  resp += `- Personas analizadas: **${total}**\n`;
+  resp += `- Desempeño sostenido (>=75): **${sustained}** (${Math.round((sustained / total) * 100)}%)\n`;
+  resp += `- High potential (>=70): **${highPotential}** (${Math.round((highPotential / total) * 100)}%)\n`;
+  resp += `- Riesgo sucesorio potencial (readiness no listo): **${highRiskSuccession}**\n`;
+  resp += `- Objetivos bonus on-track (media): **${isFinite(onTrackRate) ? onTrackRate : 0}%**\n\n`;
+
+  resp += '### Top talento por desempeño y potencial\n\n';
+  resp += '| Persona | Unidad | Desempeño | Potencial | Readiness | Objetivos |\n';
+  resp += '|---|---|---|---|---|---|\n';
+  for (const row of rows.slice(0, 10)) {
+    const totalObj = Number((row as any).objectives_total ?? 0);
+    const onTrack = Number((row as any).objectives_on_track ?? 0);
+    const objectiveSummary = totalObj > 0 ? `${onTrack}/${totalObj}` : '—';
+    resp += `| **${(row as any).full_name}** | ${(row as any).business_unit ?? '—'} | ${Math.round(Number((row as any).sustained_performance_score ?? 0))} | ${Math.round(Number((row as any).potential_score ?? 0))} | ${(row as any).readiness ?? '—'} | ${objectiveSummary} |\n`;
+  }
+
+  return resp;
+}
+
+async function performancePotentialResponse(): Promise<string> {
+  const { data: rows, error } = await supabase
+    .from('hr_integrated_talent_dashboard_v')
+    .select('*')
+    .order('sustained_performance_score', { ascending: false })
+    .limit(40);
+
+  if (error || !rows?.length) {
+    return 'No hay información de desempeño/potencial. Importa evaluaciones y potencial para habilitar esta vista.';
+  }
+
+  let resp = '## Desempeño y potencial\n\n';
+  resp += '| Persona | Desempeño sostenido | Potencial | Readiness | Acciones pendientes |\n';
+  resp += '|---|---|---|---|---|\n';
+
+  for (const row of rows.slice(0, 12)) {
+    resp += `| **${(row as any).full_name}** | ${Math.round(Number((row as any).sustained_performance_score ?? 0))} | ${Math.round(Number((row as any).potential_score ?? 0))} | ${(row as any).readiness ?? '—'} | ${Number((row as any).actions_pending ?? 0)} |\n`;
+  }
+
+  return resp;
+}
+
+async function trainingRecommendationsResponse(): Promise<string> {
+  const { data: recs, error } = await supabase
+    .from('hr_training_recommendations')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(30);
+
+  if (error) {
+    return 'No se pudieron consultar recomendaciones de formación.';
+  }
+
+  if (!recs?.length) {
+    const { data: rows } = await supabase
+      .from('hr_integrated_talent_dashboard_v')
+      .select('employee_id, full_name, sustained_performance_score, potential_score')
+      .order('sustained_performance_score', { ascending: true })
+      .limit(8);
+
+    if (!rows?.length) {
+      return 'No hay recomendaciones de formación disponibles todavía.';
+    }
+
+    let fallback = '## Recomendaciones de formación (estimadas)\n\n';
+    fallback += '| Persona | Motivo | Recomendación |\n';
+    fallback += '|---|---|---|\n';
+    for (const row of rows) {
+      const perf = Math.round(Number((row as any).sustained_performance_score ?? 0));
+      const pot = Math.round(Number((row as any).potential_score ?? 0));
+      const reason = `Desempeño ${perf} · Potencial ${pot}`;
+      const action = pot >= 70
+        ? 'Programa acelerado + mentoring con referente'
+        : 'Itinerario de upskilling con hitos trimestrales';
+      fallback += `| **${(row as any).full_name}** | ${reason} | ${action} |\n`;
+    }
+    return fallback;
+  }
+
+  let resp = '## Recomendaciones de formación\n\n';
+  resp += '| Empleado | Prioridad | Recomendación | Motivo |\n';
+  resp += '|---|---|---|---|\n';
+  for (const rec of recs.slice(0, 12)) {
+    resp += `| **${(rec as any).employee_id}** | ${(rec as any).priority} | ${(rec as any).title} | ${(rec as any).reason} |\n`;
+  }
+  return resp;
+}
+
+async function bonusObjectivesResponse(): Promise<string> {
+  const { data: objectives, error } = await supabase
+    .from('bonus_objectives')
+    .select('employee_id, cycle, objective_code, objective_name, progress_value, status')
+    .order('imported_at', { ascending: false })
+    .limit(120);
+
+  if (error || !objectives?.length) {
+    return 'No hay objetivos de bonus importados. Carga ficheros de M50 desde Admin.';
+  }
+
+  const total = objectives.length;
+  const atRisk = objectives.filter((o: any) => o.status === 'at_risk').length;
+  const onTrack = objectives.filter((o: any) => o.status === 'on_track' || o.status === 'completed').length;
+
+  let resp = '## Objetivos del bonus (M50)\n\n';
+  resp += `- Total objetivos: **${total}**\n`;
+  resp += `- On track/completed: **${onTrack}** (${Math.round((onTrack / total) * 100)}%)\n`;
+  resp += `- At risk: **${atRisk}** (${Math.round((atRisk / total) * 100)}%)\n\n`;
+  resp += '### Objetivos en riesgo\n\n';
+  resp += '| Empleado | Ciclo | Objetivo | Progreso | Estado |\n';
+  resp += '|---|---|---|---|---|\n';
+  for (const obj of objectives.filter((o: any) => o.status === 'at_risk').slice(0, 12)) {
+    resp += `| **${(obj as any).employee_id}** | ${(obj as any).cycle} | ${(obj as any).objective_name} | ${Math.round(Number((obj as any).progress_value ?? 0))}% | ${(obj as any).status} |\n`;
+  }
+  return resp;
+}
+
+async function successionRiskResponse(): Promise<string> {
+  const { data: snapshots, error } = await supabase
+    .from('hr_succession_risk_snapshots')
+    .select('*')
+    .order('snapshot_date', { ascending: false })
+    .limit(80);
+
+  if (error || !snapshots?.length) {
+    return 'No hay datos de riesgo sucesorio disponibles.';
+  }
+
+  const high = snapshots.filter((s: any) => s.risk_level === 'high');
+  const medium = snapshots.filter((s: any) => s.risk_level === 'medium');
+
+  let resp = '## Riesgo sucesorio\n\n';
+  resp += `- Riesgo alto: **${high.length}**\n`;
+  resp += `- Riesgo medio: **${medium.length}**\n`;
+  resp += `- Total posiciones monitorizadas: **${snapshots.length}**\n\n`;
+  resp += '| Posición | Unidad | Riesgo | Cobertura readiness | Bench |\n';
+  resp += '|---|---|---|---|---|\n';
+  for (const s of snapshots.slice(0, 15)) {
+    resp += `| **${(s as any).position_name}** | ${(s as any).business_unit} | ${(s as any).risk_level} | ${Math.round(Number((s as any).readiness_coverage ?? 0))}% | ${Number((s as any).bench_size ?? 0)} |\n`;
+  }
+  return resp;
+}
+
+async function careerPathsResponse(): Promise<string> {
+  const { data: paths, error } = await supabase
+    .from('hr_career_paths')
+    .select('*')
+    .order('path_code', { ascending: true })
+    .limit(80);
+
+  if (error || !paths?.length) {
+    return 'No hay trayectorias profesionales configuradas todavía.';
+  }
+
+  let resp = '## Trayectorias profesionales\n\n';
+  resp += '| Código | Desde | Hacia | Readiness mínimo | Skills clave |\n';
+  resp += '|---|---|---|---|---|\n';
+  for (const path of paths) {
+    const skills = Array.isArray((path as any).required_skills) ? (path as any).required_skills.join(', ') : '—';
+    resp += `| **${(path as any).path_code}** | ${(path as any).from_role} | ${(path as any).to_role} | ${Math.round(Number((path as any).min_readiness_score ?? 0))} | ${skills || '—'} |\n`;
+  }
+  return resp;
+}
+
+async function automationStatusResponse(): Promise<string> {
+  const { data: actions, error } = await supabase
+    .from('hr_development_actions')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(120);
+
+  if (error || !actions?.length) {
+    return 'No hay acciones automáticas registradas.';
+  }
+
+  const pending = actions.filter((a: any) => a.status === 'pending').length;
+  const inProgress = actions.filter((a: any) => a.status === 'in_progress').length;
+  const completed = actions.filter((a: any) => a.status === 'completed').length;
+
+  let resp = '## Automatizaciones y acciones\n\n';
+  resp += `- Pendientes: **${pending}**\n`;
+  resp += `- En progreso: **${inProgress}**\n`;
+  resp += `- Completadas: **${completed}**\n\n`;
+  resp += '| Tipo | Prioridad | Acción | Estado |\n';
+  resp += '|---|---|---|---|\n';
+  for (const action of actions.slice(0, 15)) {
+    resp += `| ${(action as any).action_type} | ${(action as any).priority} | ${(action as any).title} | ${(action as any).status} |\n`;
+  }
+  return resp;
+}
+
 // ─── Skill Model ────────────────────────────────────────────────────
 
 async function skillModelResponse(roleId: string | undefined, allRoles: any[]): Promise<string> {
@@ -806,20 +1044,21 @@ async function rolesOverviewResponse(allRoles: any[]): Promise<string> {
 // ─── General fallback ───────────────────────────────────────────────
 
 async function generalResponse(allRoles: any[]): Promise<string> {
-  let resp = '## Buscador de candidatos\n\n';
-  resp += 'Escribe el nombre de una **posicion** para ver los candidatos disponibles con sus datos de scoring, inteligencias y skills.\n\n';
-  resp += '### Busquedas disponibles:\n';
-  resp += '- **"Ventas Comercial"** — candidatos ordenados por score\n';
-  resp += '- **"Compara candidatos de Riesgo"** — tabla comparativa\n';
-  resp += '- **"Perfil de inteligencia de Estrategia"** — dimensiones IQ/EQ/DQ/BQ/AQ\n';
-  resp += '- **"Skills de Operaciones"** — taxonomia hard/soft/digital\n';
-  resp += '- **"Gaps de Ventas"** — gaps por tipo y complejidad\n';
-  resp += '- **"Pipeline"** — estado de candidatos por fase\n';
-  resp += '- **"Pendientes Panorama"** — candidatos sin validar\n\n';
+  let resp = '## Asistente de talento RRHH\n\n';
+  resp += 'Puedes consultar tanto selección como talento 360 (desempeño, potencial, sucesión, objetivos y desarrollo).\n\n';
+  resp += '### Búsquedas disponibles:\n';
+  resp += '- **"Cuadro de mando integrado de talento"** — visión global RRHH\n';
+  resp += '- **"Desempeño y potencial"** — lectura tipo 9-box\n';
+  resp += '- **"Objetivos bonus M50"** — estado on-track/at-risk\n';
+  resp += '- **"Riesgo sucesorio"** — posiciones críticas y cobertura\n';
+  resp += '- **"Recomendaciones de formación"** — acciones sugeridas\n';
+  resp += '- **"Automatizaciones y acciones"** — backlog de desarrollo\n';
+  resp += '- **"Trayectorias profesionales"** — rutas de carrera\n';
+  resp += '- **"Compara candidatos de Riesgo"** — tabla comparativa selección\n';
 
   if (allRoles.length) {
-    resp += '### Posiciones disponibles\n\n';
-    resp += '| Posicion | Unidad | Vacantes |\n';
+    resp += '\n### Posiciones disponibles\n\n';
+    resp += '| Posición | Unidad | Vacantes |\n';
     resp += '|---|---|---|\n';
     for (const r of allRoles) {
       resp += `| **${r.name}** | ${r.business_unit} | ${r.positions_count ?? 1} |\n`;

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams, useParams } from 'react-router-dom';
 import { Bot, X, Send, Loader2, Trash2 } from 'lucide-react';
 import { generateResponse } from '@/lib/ai-engine';
+import { brandConfig } from '@/config/brand';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -9,10 +10,10 @@ interface Message {
 }
 
 const SUGGESTED_PROMPTS = [
-  '¿Quién es el mejor candidato para Ventas Comercial?',
-  'Compara los candidatos para Análisis Riesgo Crédito',
-  '¿Qué gaps de skills hay en Estrategia?',
-  '¿Cuántas horas ahorra el sistema?',
+  '¿Qué áreas tienen mayor riesgo sucesorio?',
+  '¿Qué acciones de desarrollo se activan automáticamente esta semana?',
+  '¿Qué recomendaciones de formación hay para este colectivo?',
+  '¿Cómo va el cumplimiento de objetivos importados de M50?',
 ];
 
 const AIAssistant = () => {
@@ -49,8 +50,8 @@ const AIAssistant = () => {
     setLoading(true);
 
     try {
-      const response = await generateResponse(content.trim(), getContext());
-      setMessages([...updated, { role: 'assistant', content: response }]);
+      const result = await generateResponse(content.trim(), getContext());
+      setMessages([...updated, { role: 'assistant', content: result.text }]);
     } catch {
       setMessages([
         ...updated,
@@ -96,8 +97,8 @@ const AIAssistant = () => {
       >
         <div className="flex items-center justify-between bg-navy px-4 py-3">
           <div>
-            <h3 className="text-xs font-semibold text-white leading-tight">Skills Intelligence</h3>
-            <p className="text-[9px] text-white/50 font-medium">Asistente de selección</p>
+            <h3 className="text-xs font-semibold text-white leading-tight">{brandConfig.platformName}</h3>
+            <p className="text-[9px] text-white/50 font-medium">{brandConfig.moduleName}</p>
           </div>
           {messages.length > 0 && (
             <button
@@ -117,7 +118,7 @@ const AIAssistant = () => {
                 ¿En qué puedo ayudarte?
               </h4>
               <p className="text-[11px] text-muted-foreground mb-4 max-w-[260px]">
-                Consulta datos sobre roles, candidatos, skills o métricas.
+                Consulta datos sobre desempeño, potencial, formación, sucesión, skills y objetivos.
               </p>
               <div className="space-y-1.5 w-full">
                 {SUGGESTED_PROMPTS.map((prompt, i) => (

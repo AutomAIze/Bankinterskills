@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { brandConfig } from '@/config/brand';
 
 interface User {
   name: string;
@@ -13,24 +14,19 @@ interface AuthContextType {
   logout: () => void;
 }
 
-const DEMO_USERS: Record<string, { password: string; user: User }> = {
-  'admin@sabadell.com': {
-    password: 'skills2024',
-    user: {
-      name: 'Elena Martínez',
-      role: 'Directora de Talento',
-      email: 'admin@sabadell.com',
+const DEMO_USERS: Record<string, { password: string; user: User }> = Object.fromEntries(
+  brandConfig.demoCredentials.map((demo) => [
+    demo.email.toLowerCase(),
+    {
+      password: demo.password,
+      user: {
+        name: demo.name,
+        role: demo.role,
+        email: demo.email,
+      },
     },
-  },
-  'recruiter@sabadell.com': {
-    password: 'skills2024',
-    user: {
-      name: 'Carlos Ruiz',
-      role: 'Responsable de Selección',
-      email: 'recruiter@sabadell.com',
-    },
-  },
-};
+  ]),
+);
 
 const SESSION_KEY = 'skills_intel_session';
 

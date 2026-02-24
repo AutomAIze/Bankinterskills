@@ -8,6 +8,19 @@ import {
   advancePipelineStage, rejectCandidate, requestPanoramaValidation,
   updateCandidateNotes, setValidatedScore, setHrAdequacy, saveAiEvaluation,
 } from '@/lib/mutations';
+import {
+  fetchBonusObjectives,
+  fetchCareerPaths,
+  fetchDevelopmentActions,
+  fetchIntegratedTalentKpis,
+  fetchIntegratedTalentRows,
+  fetchPerformanceEvaluations,
+  fetchPotentialAssessments,
+  fetchSuccessionRiskSnapshots,
+  fetchTrainingRecommendations,
+  computeEmployeeSkillGaps,
+} from '@/lib/hr/queries';
+import { runHrAutomations, updateDevelopmentActionStatus } from '@/lib/hr/mutations';
 
 export function useRoles() {
   return useQuery({
@@ -175,6 +188,108 @@ export function useSaveAiEvaluation() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['aiEvaluation', vars.candidateId, vars.roleId] });
       qc.invalidateQueries({ queryKey: ['candidate', vars.candidateId] });
+    },
+  });
+}
+
+export function useIntegratedTalentRows() {
+  return useQuery({
+    queryKey: ['hr', 'integratedRows'],
+    queryFn: fetchIntegratedTalentRows,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useIntegratedTalentKpis() {
+  return useQuery({
+    queryKey: ['hr', 'kpis'],
+    queryFn: fetchIntegratedTalentKpis,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function usePerformanceEvaluations(cycle?: string) {
+  return useQuery({
+    queryKey: ['hr', 'evaluations', cycle ?? 'all'],
+    queryFn: () => fetchPerformanceEvaluations(cycle),
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function usePotentialAssessments(cycle?: string) {
+  return useQuery({
+    queryKey: ['hr', 'potential', cycle ?? 'all'],
+    queryFn: () => fetchPotentialAssessments(cycle),
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useBonusObjectives(cycle?: string) {
+  return useQuery({
+    queryKey: ['hr', 'bonusObjectives', cycle ?? 'all'],
+    queryFn: () => fetchBonusObjectives(cycle),
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useSuccessionRiskSnapshots() {
+  return useQuery({
+    queryKey: ['hr', 'successionRisk'],
+    queryFn: fetchSuccessionRiskSnapshots,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useDevelopmentActions() {
+  return useQuery({
+    queryKey: ['hr', 'developmentActions'],
+    queryFn: fetchDevelopmentActions,
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useTrainingRecommendations() {
+  return useQuery({
+    queryKey: ['hr', 'trainingRecommendations'],
+    queryFn: fetchTrainingRecommendations,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useCareerPaths() {
+  return useQuery({
+    queryKey: ['hr', 'careerPaths'],
+    queryFn: fetchCareerPaths,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useEmployeeSkillGaps() {
+  return useQuery({
+    queryKey: ['hr', 'skillGaps'],
+    queryFn: computeEmployeeSkillGaps,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useRunHrAutomations() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: runHrAutomations,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['hr'] });
+    },
+  });
+}
+
+export function useUpdateDevelopmentActionStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { actionId: string; status: 'pending' | 'in_progress' | 'completed' }) =>
+      updateDevelopmentActionStatus(args.actionId, args.status),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['hr', 'developmentActions'] });
+      qc.invalidateQueries({ queryKey: ['hr', 'kpis'] });
     },
   });
 }

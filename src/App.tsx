@@ -7,14 +7,16 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Layout from "./components/Layout";
 import LoginPage from "./pages/LoginPage";
-import RolView from "./pages/RolView";
-import RankingView from "./pages/RankingView";
-import CandidateDetailView from "./pages/CandidateDetailView";
-import ShortlistView from "./pages/ShortlistView";
 import TaxonomyView from "./pages/TaxonomyView";
 import SkillsIntelligenceView from "./pages/SkillsIntelligenceView";
 import AdminView from "./pages/AdminView";
 import ChatView from "./pages/ChatView";
+import PerformancePotentialView from "./pages/PerformancePotentialView";
+import TalentMapSuccessionView from "./pages/TalentMapSuccessionView";
+import ObjectivesBonusView from "./pages/ObjectivesBonusView";
+import DevelopmentActionsView from "./pages/DevelopmentActionsView";
+import CareerPathsView from "./pages/CareerPathsView";
+import TalentDashboardView from "./pages/TalentDashboardView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -70,10 +72,12 @@ const AppRoutes = () => (
       }
     >
       <Route path="/" element={<ChatView />} />
-      <Route path="/roles" element={<RolView />} />
-      <Route path="/ranking" element={<RankingView />} />
-      <Route path="/shortlist" element={<ShortlistView />} />
-      <Route path="/candidato/:candidateId" element={<CandidateDetailView />} />
+      <Route path="/talent-dashboard" element={<TalentDashboardView />} />
+      <Route path="/performance-potential" element={<PerformancePotentialView />} />
+      <Route path="/talent-succession" element={<TalentMapSuccessionView />} />
+      <Route path="/objectives-bonus" element={<ObjectivesBonusView />} />
+      <Route path="/development-actions" element={<DevelopmentActionsView />} />
+      <Route path="/career-paths" element={<CareerPathsView />} />
       <Route path="/taxonomia" element={<TaxonomyView />} />
       <Route path="/skills-intelligence" element={<SkillsIntelligenceView />} />
       <Route path="/admin" element={<AdminView />} />

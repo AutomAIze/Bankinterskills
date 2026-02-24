@@ -84,5 +84,5 @@ export function getConfidenceLabel(confidence: number): { label: string; color: 
 export function getSourceLabel(source: string): { label: string; type: 'declarative' | 'scientific' } {
   const scientific = ['PANORAMA', 'TKT_AGENT'];
   if (scientific.includes(source)) return { label: source === 'PANORAMA' ? 'Panorama' : 'TKT Agent', type: 'scientific' };
-  return { label: source === 'SABADELL' ? 'Sabadell' : 'Declarativo', type: 'declarative' };
+  return { label: source === 'SABADELL' ? 'Cliente' : 'Declarativo', type: 'declarative' };
 }

@@ -3,9 +3,8 @@ import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import { Bot, Loader2, Trash2, ArrowUp, RotateCcw, ExternalLink } from 'lucide-react';
 import { generateResponse } from '@/lib/ai-engine';
 import type { ResponseMeta } from '@/lib/ai-engine';
-import ValidationPanel from '@/components/ValidationPanel';
-import { useRolesDashboard } from '@/hooks/useSkillsData';
-import { ConnectionErrorBanner } from '@/components/ConnectionErrorBanner';
+import { brandConfig } from '@/config/brand';
+import { chatLabels } from '@/config/labels';
 
 interface Message {
   id: string;
@@ -189,7 +188,7 @@ const ChatView = () => {
           </div>
 
           <p className="text-[10px] text-muted-foreground/40 text-center mt-2 tracking-widest uppercase">
-            Skills Intelligence · Banco Sabadell
+            {chatLabels.footerSignature}
           </p>
         </div>
       </div>
@@ -201,52 +200,46 @@ const ChatView = () => {
 
 const FEATURE_QUERIES = [
   {
-    label: 'Ranking de candidatos',
-    query: '¿Quiénes son los mejores candidatos para este rol?',
+    label: 'Potencial alto',
+    query: '¿Qué personas muestran mayor potencial en este colectivo?',
   },
   {
-    label: 'Dimensiones de inteligencia',
-    query: '¿Cuáles son las dimensiones de inteligencia de los candidatos?',
+    label: 'Desempeño sostenido',
+    query: '¿Qué empleados tienen desempeño sostenido en los últimos ciclos?',
   },
   {
-    label: 'Validación Panorama',
-    query: '¿Qué candidatos tienen validación Panorama?',
+    label: 'Riesgo sucesorio',
+    query: '¿Qué puestos críticos tienen riesgo sucesorio alto?',
   },
   {
-    label: 'Shortlist y recomendaciones',
-    query: '¿Cuál es el shortlist recomendado?',
+    label: 'Recomendación formativa',
+    query: '¿Qué acciones de formación recomiendas según la última evaluación?',
   },
   {
-    label: 'Gaps de competencias',
-    query: '¿Qué gaps de skills hay en los candidatos?',
+    label: 'Objetivos bonus',
+    query: 'Muéstrame el estado de objetivos importados desde M50.',
   },
   {
-    label: 'Equivalencias de skills',
-    query: '¿Qué equivalencias existen entre el modelo Sabadell y ESCO?',
+    label: 'Trayectorias',
+    query: '¿Qué trayectorias profesionales sugeridas hay para este perfil?',
   },
 ];
 
 function EmptyState({ onSend }: { onSend: (query: string) => void }) {
-  const { data: roles, isLoading, isError, refetch } = useRolesDashboard();
-
   return (
     <div className="flex flex-col items-center justify-center px-4 sm:px-6 py-4 sm:py-6 overflow-y-auto h-full">
       <div className="max-w-3xl w-full">
-        {isError && (
-          <ConnectionErrorBanner onRetry={() => refetch()} className="mb-4" />
-        )}
         <div className="text-center mb-4 sm:mb-5">
           <img
-            src="/sabadell-logo.png"
-            alt="Banco Sabadell"
+            src={brandConfig.logoPath}
+            alt={brandConfig.logoAlt}
             className="h-7 sm:h-8 w-auto mb-3 mx-auto"
           />
           <h2 className="text-xl sm:text-2xl font-bold text-navy mb-1.5 tracking-tight">
-            Buscador de candidatos
+            {chatLabels.emptyStateTitle}
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
-            Busca por posición para consultar candidatos, scores, dimensiones de inteligencia,
-            hard skills, soft skills y datos de validación.
+            {chatLabels.emptyStateSubtitle}
           </p>
         </div>
 
@@ -271,32 +264,32 @@ function EmptyState({ onSend }: { onSend: (query: string) => void }) {
           ))}
         </div>
 
-        {/* Roles */}
+        {/* Módulos */}
         <p className="text-[10px] font-semibold text-muted-foreground tracking-wider mb-1.5">
-          Roles
+          Consultas rápidas
         </p>
-        {isLoading ? (
-          <div className="flex justify-center py-4">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-            {(roles ?? []).map((role) => (
-              <button
-                key={role.id}
-                onClick={() => onSend(`¿Quiénes son los mejores candidatos para ${role.name}?`)}
-                className="group p-2.5 sm:p-3 border border-border/60 bg-card text-left hover:border-primary/30 hover:shadow-card-hover transition-all duration-200 active:scale-[0.98]"
-              >
-                <p className="text-[11px] font-bold text-navy mb-0.5 group-hover:text-primary transition-colors leading-tight">
-                  {role.name}
-                </p>
-                <p className="text-[10px] text-muted-foreground leading-snug">
-                  {role.totalCandidates} cand. · {role.unit}
-                </p>
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+          {[
+            { label: 'Riesgo sucesorio', query: '¿Qué posiciones tienen riesgo sucesorio alto?' },
+            { label: 'High potential', query: '¿Quiénes son los empleados de alto potencial?' },
+            { label: 'Objetivos en riesgo', query: '¿Qué objetivos de bonus están en riesgo?' },
+            { label: 'Brechas de skills', query: '¿Cuáles son las principales brechas de skills organizativas?' },
+            { label: 'Acciones pendientes', query: '¿Cuántas acciones de desarrollo están pendientes de ejecución?' },
+          ].map((item, i) => (
+            <button
+              key={i}
+              onClick={() => onSend(item.query)}
+              className="group p-2.5 sm:p-3 border border-border/60 bg-card text-left hover:border-primary/30 hover:shadow-card-hover transition-all duration-200 active:scale-[0.98]"
+            >
+              <p className="text-[11px] font-bold text-navy mb-0.5 group-hover:text-primary transition-colors leading-tight">
+                {item.label}
+              </p>
+              <p className="text-[10px] text-muted-foreground leading-snug line-clamp-2">
+                {item.query}
+              </p>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -306,15 +299,12 @@ function EmptyState({ onSend }: { onSend: (query: string) => void }) {
 
 function MessageBubble({ message, isLast }: { message: Message; isLast: boolean }) {
   const isUser = message.role === 'user';
-  const [showValidation, setShowValidation] = useState(false);
-  const [validated, setValidated] = useState(false);
-  const hasCandidates = !isUser && message.meta?.candidates && message.meta.candidates.length > 0;
 
   return (
     <div className={`py-5 sm:py-6 ${isUser ? '' : 'bg-secondary/25 -mx-4 sm:-mx-6 px-4 sm:px-6'} ${isLast && !isUser ? 'animate-fadeIn' : ''}`}>
       <div className="flex gap-3.5 sm:gap-4">
         <div className={`shrink-0 flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center mt-0.5 shadow-sm ${
-          isUser ? 'bg-secondary border border-border' : 'gradient-navy'
+          isUser ? 'bg-secondary border border-border' : 'bg-primary'
         }`}>
           {isUser ? (
             <span className="text-[11px] font-bold text-navy">TU</span>
@@ -326,7 +316,7 @@ function MessageBubble({ message, isLast }: { message: Message; isLast: boolean 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5 mb-2">
             <span className="text-xs font-bold text-navy">
-              {isUser ? 'Tu' : 'Skills Intelligence'}
+              {isUser ? 'Tu' : brandConfig.platformName}
             </span>
             <span className="text-[11px] text-muted-foreground/70 tabular-nums">
               {message.timestamp.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
@@ -340,27 +330,6 @@ function MessageBubble({ message, isLast }: { message: Message; isLast: boolean 
               <FormattedMarkdown content={message.content} />
             )}
           </div>
-
-          {hasCandidates && !showValidation && !validated && (
-            <button
-              onClick={() => setShowValidation(true)}
-              className="mt-4 px-4 py-2 text-xs font-semibold border-2 border-navy text-navy hover:bg-navy hover:text-white transition-all active:scale-[0.98]"
-            >
-              Validar resultados
-            </button>
-          )}
-
-          {validated && (
-            <p className="mt-3 text-[11px] text-accent font-medium">Resultados validados</p>
-          )}
-
-          {showValidation && message.meta && (
-            <ValidationPanel
-              meta={message.meta}
-              onClose={() => setShowValidation(false)}
-              onSaved={() => { setShowValidation(false); setValidated(true); }}
-            />
-          )}
         </div>
       </div>
     </div>
@@ -373,12 +342,12 @@ function TypingIndicator() {
   return (
     <div className="py-5 sm:py-6 bg-secondary/25 -mx-4 sm:-mx-6 px-4 sm:px-6 animate-fadeIn">
       <div className="flex gap-3.5 sm:gap-4">
-        <div className="shrink-0 flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center mt-0.5 gradient-navy shadow-sm">
+        <div className="shrink-0 flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center mt-0.5 bg-primary shadow-sm">
           <Bot className="h-4 w-4 text-white" />
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2.5 mb-2">
-            <span className="text-xs font-bold text-navy">Skills Intelligence</span>
+            <span className="text-xs font-bold text-navy">{brandConfig.platformName}</span>
           </div>
           <div className="flex items-center gap-2.5 py-2">
             <div className="flex items-center gap-1.5">

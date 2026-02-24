@@ -3,15 +3,20 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { LogOut, User, Menu, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AIAssistant from './AIAssistant';
+import { brandConfig } from '@/config/brand';
+import { navLabels } from '@/config/labels';
 
 const navItems = [
-  { to: '/', label: 'Asistente' },
-  { to: '/roles', label: 'Roles' },
-  { to: '/ranking', label: 'Ranking' },
-  { to: '/shortlist', label: 'Shortlist' },
-  { to: '/taxonomia', label: 'Taxonomía' },
-  { to: '/skills-intelligence', label: 'Intelligence' },
-  { to: '/admin', label: 'Admin' },
+  { to: '/', label: navLabels.assistant },
+  { to: '/talent-dashboard', label: navLabels.talentDashboard },
+  { to: '/performance-potential', label: navLabels.performance },
+  { to: '/talent-succession', label: navLabels.succession },
+  { to: '/objectives-bonus', label: navLabels.objectives },
+  { to: '/development-actions', label: navLabels.development },
+  { to: '/career-paths', label: navLabels.careerPaths },
+  { to: '/taxonomia', label: navLabels.taxonomy },
+  { to: '/skills-intelligence', label: navLabels.intelligence },
+  { to: '/admin', label: navLabels.admin },
 ];
 
 const Layout = () => {
@@ -26,17 +31,17 @@ const Layout = () => {
         <div className="flex h-12 sm:h-14 items-center justify-between px-3 sm:px-6">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <img
-              src="/sabadell-logo.png"
-              alt="Banco Sabadell"
-              className="h-4 sm:h-5 w-auto brightness-0 invert shrink-0"
+              src={brandConfig.logoWhitePath}
+              alt={brandConfig.logoAlt}
+              className="h-4 sm:h-5 w-auto shrink-0"
             />
             <div className="h-4 sm:h-5 w-px bg-white/15 shrink-0 hidden sm:block" />
             <div className="hidden sm:block">
               <h1 className="text-xs font-semibold text-white leading-tight tracking-wide">
-                Skills Intelligence
+                {brandConfig.platformName}
               </h1>
               <p className="text-[9px] text-white/40 font-medium tracking-wider uppercase">
-                Módulo de Selección
+                {brandConfig.moduleName}
               </p>
             </div>
           </div>

@@ -6,18 +6,19 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   Legend,
 } from 'recharts';
+import { brandConfig } from '@/config/brand';
 
-const CustomBarTooltip = ({ active, payload }: any) => {
+const CustomBarTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload?: { skillName?: string; demand?: number; supply?: number; avgLevel?: number } }> }) => {
   if (!active || !payload?.length) return null;
   const d = payload[0]?.payload;
   return (
     <div className="chart-tooltip">
       <p className="font-bold text-foreground text-xs mb-1">{d?.skillName}</p>
       <p className="text-xs text-muted-foreground">
-        Demanda: <span className="font-bold text-foreground">{d?.demand}</span> roles
+        Demanda: <span className="font-bold text-foreground">{d?.demand}</span> posiciones
       </p>
       <p className="text-xs text-muted-foreground">
-        Oferta: <span className="font-bold text-foreground">{d?.supply}</span> candidatos
+        Oferta: <span className="font-bold text-foreground">{d?.supply}</span> profesionales
       </p>
       <p className="text-xs text-muted-foreground">
         Nivel medio: <span className="font-bold text-foreground">{d?.avgLevel}</span>/100
@@ -81,15 +82,13 @@ const SkillsIntelligenceView = () => {
 
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div>
         <h2 className="text-lg sm:text-xl font-bold text-navy tracking-tight">Skills Intelligence</h2>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Inventario organizativo · Supply vs. Demand · Gaps y clusters
+          Inventario competencial · Demanda vs. disponibilidad · Gaps y clusters
         </p>
       </div>
 
-      {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         <Card className="shadow-metric hover:shadow-metric-hover transition-shadow duration-300">
           <CardContent className="p-2.5 sm:pt-4 sm:pb-4">
@@ -117,7 +116,6 @@ const SkillsIntelligenceView = () => {
         </Card>
       </div>
 
-      {/* Gaps: Critical + Surplus */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-5">
         <Card className="lg:col-span-3 shadow-card hover:shadow-card-hover transition-shadow duration-300">
           <CardHeader className="pb-2">
@@ -126,7 +124,7 @@ const SkillsIntelligenceView = () => {
               <CardTitle className="text-sm font-bold text-navy">Gaps Críticos</CardTitle>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Skills con mayor brecha entre demanda y disponibilidad
+              Skills con mayor brecha entre demanda organizativa y disponibilidad interna
             </p>
           </CardHeader>
           <CardContent>
@@ -157,11 +155,11 @@ const SkillsIntelligenceView = () => {
                       </div>
                       <div className="w-14 text-right">
                         <p className="text-xs font-bold text-navy tabular-nums">{s.demand}</p>
-                        <p className="text-[9px] text-muted-foreground">roles</p>
+                        <p className="text-[9px] text-muted-foreground">posic.</p>
                       </div>
                       <div className="w-14 text-right">
                         <p className="text-xs font-bold text-navy tabular-nums">{s.supply}</p>
-                        <p className="text-[9px] text-muted-foreground">cand.</p>
+                        <p className="text-[9px] text-muted-foreground">prof.</p>
                       </div>
                       <div className="w-16">
                         <div className="w-full h-1.5 bg-muted overflow-hidden">
@@ -189,7 +187,7 @@ const SkillsIntelligenceView = () => {
               <CardTitle className="text-sm font-bold text-navy">Excedente de talento</CardTitle>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Skills con oferta muy superior a demanda
+              Skills con capacidad interna superior a la demanda
             </p>
           </CardHeader>
           <CardContent>
@@ -208,7 +206,7 @@ const SkillsIntelligenceView = () => {
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-xs font-bold text-accent tabular-nums">{ratio}:1</p>
-                        <p className="text-[9px] text-muted-foreground">{s.supply}C / {s.demand}R</p>
+                        <p className="text-[9px] text-muted-foreground">{s.supply} / {s.demand}</p>
                       </div>
                     </div>
                   );
@@ -219,86 +217,87 @@ const SkillsIntelligenceView = () => {
         </Card>
       </div>
 
-      {/* Bar chart — full width */}
-      <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300">
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <TrendingDown className="h-4 w-4 text-primary" />
-            <CardTitle className="text-sm font-bold text-navy">Demanda vs. Oferta por Skill</CardTitle>
-          </div>
-          <p className="text-[11px] text-muted-foreground">
-            Top 15 skills más demandadas — roles que las requieren vs. candidatos que las poseen
-          </p>
-        </CardHeader>
-        <CardContent>
-          <div style={{ height: Math.max(360, barData.length * 32 + 60) }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData} layout="vertical" barGap={2} margin={{ left: 8, right: 12, top: 4, bottom: 4 }}>
-                <CartesianGrid horizontal={false} stroke="hsl(var(--border))" strokeDasharray="4 4" strokeOpacity={0.6} />
-                <XAxis type="number" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis
-                  type="category" dataKey="shortName" width={180}
-                  tick={{ fontSize: 10, fill: 'hsl(var(--foreground))', fontWeight: 500 }}
-                  axisLine={false} tickLine={false}
-                  interval={0}
-                />
-                <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'hsl(var(--muted) / 0.3)' }} />
-                <Legend wrapperStyle={{ fontSize: 10, paddingTop: 8 }} iconType="circle" iconSize={8} />
-                <Bar dataKey="demand" name="Demanda (roles)" fill="hsl(218, 100%, 32%)" maxBarSize={14} radius={0} animationDuration={800} />
-                <Bar dataKey="supply" name="Oferta (candidatos)" fill="hsl(192, 100%, 38%)" maxBarSize={14} radius={0} animationDuration={800} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+      {barData.length > 0 && (
+        <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <TrendingDown className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm font-bold text-navy">Demanda vs. Disponibilidad por Skill</CardTitle>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Top 15 skills más requeridas — posiciones que las necesitan vs. profesionales que las poseen
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div style={{ height: Math.max(360, barData.length * 32 + 60) }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barData} layout="vertical" barGap={2} margin={{ left: 8, right: 12, top: 4, bottom: 4 }}>
+                  <CartesianGrid horizontal={false} stroke="hsl(var(--border))" strokeDasharray="4 4" strokeOpacity={0.6} />
+                  <XAxis type="number" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <YAxis
+                    type="category" dataKey="shortName" width={180}
+                    tick={{ fontSize: 10, fill: 'hsl(var(--foreground))', fontWeight: 500 }}
+                    axisLine={false} tickLine={false}
+                    interval={0}
+                  />
+                  <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'hsl(var(--muted) / 0.3)' }} />
+                  <Legend wrapperStyle={{ fontSize: 10, paddingTop: 8 }} iconType="circle" iconSize={8} />
+                  <Bar dataKey="demand" name="Demanda (posiciones)" fill="hsl(var(--navy))" maxBarSize={14} radius={0} animationDuration={800} />
+                  <Bar dataKey="supply" name="Disponibilidad (profesionales)" fill="hsl(var(--primary))" maxBarSize={14} radius={0} animationDuration={800} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Clusters */}
-      <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-bold text-navy">Clusters de Skills</CardTitle>
-          <p className="text-[11px] text-muted-foreground">
-            Agrupación funcional de competencias por área — {clusters.length} clusters, {taxonomy.length} skills
-          </p>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {clusters.map((cluster) => {
-              const totalCandidates = cluster.skills.reduce((s, sk) => s + sk.candidateCount, 0);
-              return (
-                <div key={cluster.id} className="border p-3 hover:bg-secondary/20 transition-colors duration-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 shrink-0" style={{ backgroundColor: cluster.color }} />
-                      <h4 className="text-xs font-bold text-navy">{cluster.name}</h4>
+      {clusters.length > 0 && (
+        <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-navy">Clusters de Skills</CardTitle>
+            <p className="text-[11px] text-muted-foreground">
+              Agrupación funcional de competencias por área — {clusters.length} clusters, {taxonomy.length} skills
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {clusters.map((cluster) => {
+                const totalProfessionals = cluster.skills.reduce((s, sk) => s + sk.candidateCount, 0);
+                return (
+                  <div key={cluster.id} className="border p-3 hover:bg-secondary/20 transition-colors duration-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 shrink-0" style={{ backgroundColor: cluster.color }} />
+                        <h4 className="text-xs font-bold text-navy">{cluster.name}</h4>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                          {cluster.skills.length} skills
+                        </span>
+                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                          {totalProfessionals} prof.
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {cluster.skills.length} skills
-                      </span>
-                      <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {totalCandidates} reg.
-                      </span>
+                    <div className="flex flex-wrap gap-1">
+                      {cluster.skills.map((sk) => (
+                        <span
+                          key={sk.id}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 border text-[11px] font-medium text-foreground/80 bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                        >
+                          {sk.name}
+                          <span className="text-[10px] text-muted-foreground tabular-nums">({sk.candidateCount})</span>
+                        </span>
+                      ))}
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {cluster.skills.map((sk) => (
-                      <span
-                        key={sk.id}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 border text-[11px] font-medium text-foreground/80 bg-secondary/30 hover:bg-secondary/50 transition-colors"
-                      >
-                        {sk.name}
-                        <span className="text-[10px] text-muted-foreground tabular-nums">({sk.candidateCount})</span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Equivalence Gaps */}
       {equivGaps.length > 0 && (
         <Card className="shadow-card hover:shadow-card-hover transition-shadow duration-300">
           <CardHeader className="pb-2">
@@ -307,7 +306,7 @@ const SkillsIntelligenceView = () => {
               <CardTitle className="text-sm font-bold text-navy">Skills sin Equivalencia</CardTitle>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              {equivGaps.length} skills sin mapeo entre el modelo Sabadell y ESCO/TKT — {equivGaps.filter(g => g.origin === 'agente').length} del agente, {equivGaps.filter(g => g.origin === 'cliente').length} del cliente
+              {equivGaps.length} skills sin mapeo entre el modelo {brandConfig.clientName} y ESCO
             </p>
           </CardHeader>
           <CardContent>
@@ -318,7 +317,7 @@ const SkillsIntelligenceView = () => {
                     <h4 className="text-xs font-bold text-navy">{roleName}</h4>
                     <div className="flex items-center gap-3">
                       <span className="text-[10px] font-semibold text-primary tabular-nums">{counts.agente} ESCO</span>
-                      <span className="text-[10px] font-semibold text-warning tabular-nums">{counts.cliente} Sabadell</span>
+                      <span className="text-[10px] font-semibold text-warning tabular-nums">{counts.cliente} {brandConfig.clientName}</span>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -348,28 +347,17 @@ const SkillsIntelligenceView = () => {
                 </div>
               ))}
             </div>
-            <div className="flex items-center gap-4 mt-3 pt-3 border-t">
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                <span className="text-[10px] text-muted-foreground"><strong className="text-foreground">ESCO/Agente:</strong> Skills detectadas por TKT sin equivalencia en catálogo Sabadell</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-warning" />
-                <span className="text-[10px] text-muted-foreground"><strong className="text-foreground">Cliente:</strong> Skills de Sabadell sin equivalencia en ontología ESCO</span>
-              </div>
-            </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Methodology */}
       <Card className="shadow-card">
         <CardContent className="p-3 sm:pt-5 sm:pb-5 sm:px-6">
           <h3 className="text-xs font-bold text-navy mb-1.5">Metodología de normalización</h3>
           <p className="text-[11px] sm:text-xs text-foreground/70 leading-relaxed">
-            El motor de normalización mapea terminología heterogénea (CVs, ofertas de empleo, certificaciones)
+            El motor de normalización mapea terminología heterogénea (puestos, trayectorias, certificaciones)
             a una ontología unificada basada en la clasificación ESCO v1.2.1, enriquecida con el modelo
-            competencial interno de Banco Sabadell. Cada alias se vincula a su skill canónica con un score
+            competencial interno de {brandConfig.clientName}. Cada alias se vincula a su skill canónica con un score
             de confianza (0–100%). Las skills adyacentes se calculan mediante co-ocurrencia y similitud semántica.
           </p>
         </CardContent>

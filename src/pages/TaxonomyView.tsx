@@ -6,6 +6,7 @@ import {
   Loader2, ExternalLink, Search, ChevronDown, ChevronRight,
 } from 'lucide-react';
 import type { TaxonomySkill } from '@/lib/queries';
+import { brandConfig } from '@/config/brand';
 
 const TYPE_LABELS: Record<string, string> = {
   knowledge: 'Conocimiento',
@@ -27,10 +28,11 @@ const REUSABILITY_LABELS: Record<string, string> = {
 };
 
 const SOURCE_LABELS: Record<string, string> = {
-  CV_PARSE: 'CV Parsing',
-  JOB_POSTING: 'Oferta empleo',
+  CV_PARSE: 'Parsing interno',
+  JOB_POSTING: 'Posición',
   ESCO_SYNONYM: 'ESCO',
-  SABADELL_INTERNAL: 'Sabadell',
+  SABADELL_INTERNAL: brandConfig.clientName,
+  BANKINTER_INTERNAL: brandConfig.clientName,
   MANUAL: 'Manual',
 };
 
@@ -72,7 +74,7 @@ function SkillDetailPanel({ skill }: { skill: TaxonomySkill }) {
 
       {skill.subcategory && (
         <div className="border bg-secondary/30 p-2.5">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Categoría Sabadell</p>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Categoría cliente</p>
           <span className={`inline-block px-2 py-0.5 text-[11px] font-semibold ${
             skill.subcategory === 'Impulsora' ? 'bg-primary/10 text-primary border border-primary/20' :
             skill.subcategory === 'Básica' ? 'bg-muted text-foreground border' :
@@ -88,13 +90,13 @@ function SkillDetailPanel({ skill }: { skill: TaxonomySkill }) {
       <div className="grid grid-cols-2 gap-2">
         <div className="border p-2.5">
           <div className="flex items-center gap-1.5 mb-1">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Demanda (roles)</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Demanda (posiciones)</p>
           </div>
           <p className="text-lg font-extrabold text-navy tabular-nums">{skill.roleCount}</p>
         </div>
         <div className="border p-2.5">
           <div className="flex items-center gap-1.5 mb-1">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Oferta (candidatos)</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Disponibilidad (prof.)</p>
           </div>
           <p className="text-lg font-extrabold text-navy tabular-nums">{skill.candidateCount}</p>
         </div>
@@ -229,7 +231,7 @@ const TaxonomyView = () => {
           <h2 className="text-xl font-bold text-navy tracking-tight">Taxonomía de Skills</h2>
         </div>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Ontología ESCO + modelo Sabadell · Normalización y adjacencia
+          Ontología ESCO + modelo cliente · Normalización y adjacencia
         </p>
       </div>
 
@@ -296,7 +298,7 @@ const TaxonomyView = () => {
                   <SelectContent className="bg-card z-50">
                     <SelectItem value="all">Todas</SelectItem>
                     <SelectItem value="ESCO">ESCO</SelectItem>
-                    <SelectItem value="SABADELL">Sabadell</SelectItem>
+                    <SelectItem value="BANKINTER">{brandConfig.clientName}</SelectItem>
                     <SelectItem value="MIX">Mixto</SelectItem>
                   </SelectContent>
                 </Select>
