@@ -1,7 +1,9 @@
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, PlayCircle, CheckCircle2, Clock3 } from "lucide-react";
 import {
   useDevelopmentActions,
+  useIntegratedTalentRows,
   useRunHrAutomations,
   useUpdateDevelopmentActionStatus,
 } from "@/hooks/useSkillsData";
@@ -9,6 +11,13 @@ import { toast } from "sonner";
 
 const DevelopmentActionsView = () => {
   const { data: actions = [], isLoading, refetch } = useDevelopmentActions();
+  const { data: rows = [] } = useIntegratedTalentRows();
+
+  const nameMap = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const r of rows) m.set(r.employeeId, r.fullName);
+    return m;
+  }, [rows]);
   const runAutomations = useRunHrAutomations();
   const updateStatus = useUpdateDevelopmentActionStatus();
 
@@ -101,6 +110,9 @@ const DevelopmentActionsView = () => {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-navy">{action.title}</p>
+                  <p className="text-[11px] text-foreground/70 mt-0.5 font-medium">
+                    {nameMap.get(action.employeeId) ?? action.employeeId}
+                  </p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
                     {action.reason}
                   </p>

@@ -1,16 +1,25 @@
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Target, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { useBonusObjectives } from "@/hooks/useSkillsData";
+import { useBonusObjectives, useIntegratedTalentRows } from "@/hooks/useSkillsData";
 
 const STATUS_LABEL: Record<string, string> = {
   on_track: "On track",
   at_risk: "En riesgo",
   completed: "Completado",
+  not_started: "No iniciado",
   pending: "Pendiente",
 };
 
 const ObjectivesBonusView = () => {
   const { data: objectives = [], isLoading } = useBonusObjectives();
+  const { data: rows = [] } = useIntegratedTalentRows();
+
+  const nameMap = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const r of rows) m.set(r.employeeId, r.fullName);
+    return m;
+  }, [rows]);
 
   if (isLoading) {
     return (
@@ -82,7 +91,7 @@ const ObjectivesBonusView = () => {
                 key={objective.id}
                 className="grid grid-cols-[1.2fr_1.4fr_.7fr_.7fr_.7fr] gap-2 items-center px-2 py-2 border hover:bg-secondary/20 transition-colors"
               >
-                <p className="text-xs font-semibold text-navy truncate">{objective.employeeId}</p>
+                <p className="text-xs font-semibold text-navy truncate">{nameMap.get(objective.employeeId) ?? objective.employeeId}</p>
                 <p className="text-[11px] text-foreground truncate">{objective.objectiveName}</p>
                 <p className="text-xs text-right tabular-nums text-navy">{objective.weight}%</p>
                 <p className="text-xs text-right tabular-nums text-navy">
